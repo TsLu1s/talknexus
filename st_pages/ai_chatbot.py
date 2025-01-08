@@ -1,84 +1,10 @@
 import streamlit as st
-import requests
-from langchain.callbacks.base import BaseCallbackHandler
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
-#from langchain_ollama import ChatOllama
 from langchain_community.llms import Ollama
-
-
-class StreamHandler(BaseCallbackHandler):
-    """
-    Custom callback handler for streaming LLM responses token by token.
-    
-    Attributes:
-        container: Streamlit container object for displaying streamed tokens
-        text (str): Accumulated response text
-    """
-    def __init__(self, container):
-        self.container = container
-        self.text = ""
-        
-    def on_llm_new_token(self, token: str, **kwargs):
-        """
-        Processes each new token from the LLM response stream.
-        
-        Args:
-            token (str): Individual token from the LLM response
-            **kwargs: Additional keyword arguments from the callback
-        """
-        try:
-            self.text += token
-            clean_text = self.text
-            
-            # Check if we need to clean up AIMessage formatting
-            if "AIMessage" in clean_text:
-                # Handle complete AIMessage format
-                if "content=\"" in clean_text:
-                    try:
-                        clean_text = clean_text.split("content=\"")[1].rsplit("\"", 1)[0]
-                    except IndexError:
-                        # If splitting fails, keep the original text
-                        pass
-                
-                # Remove any remaining AIMessage wrapper
-                clean_text = (clean_text.replace("AIMessage(", "")
-                                      .replace(", additional_kwargs={}", "")
-                                      .replace(", response_metadata={})", "")
-                                      .replace('{ "data":' , "")
-                                      .replace('}' , "")
-                )
-            
-            # Update the display with cleaned text
-            self.container.markdown(clean_text)
-            
-        except Exception as e:
-            # Log the error without disrupting the stream
-            print(f"Warning in StreamHandler: {str(e)}")
-            # Still try to display something to the user
-            self.container.markdown(self.text)
-
-def get_ollama_models() -> list:
-    """
-    Retrieves available models from Ollama API.
-    
-    Sends GET request to Ollama API endpoint and processes response to extract
-    valid model names, filtering out failed or invalid models.
-    
-    Returns:
-        list: List of available model names, empty if API unreachable
-    """
-    try:
-        response = requests.get("http://localhost:11434/api/tags")
-        if response.status_code == 200:
-            models = response.json()
-            return [model['name'] for model in models['models']
-                    if all(keyword not in model['name'].lower()
-                        for keyword in ('failed', 'embed', 'bge'))]
-        return []
-    except:
-        return []
+from schema.streamhandler import StreamHandler
+from schema.ollama_models_db import get_ollama_models
 
 def get_conversation_chain(model_name: str) -> ConversationChain:
     """
@@ -90,14 +16,6 @@ def get_conversation_chain(model_name: str) -> ConversationChain:
     Returns:
         ConversationChain: Configured conversation chain with memory and prompt template
     """
-    # Set up Ollama LLM
-    #llm = ChatOllama(
-    #    model=model_name,
-    #    temperature=0.2,
-    #    base_url="http://localhost:11434",
-        #format="json"  # Updated to use simple string format
-    #)
-
     # Set up Ollama LLM
     llm = Ollama(
         model=model_name,

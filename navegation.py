@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", category=Warning)
+
 import streamlit as st
 import st_pages # required modules
 
@@ -69,8 +72,8 @@ def navigate():
             <div class="header-container" style="cursor: pointer;">
                 <div class="profile-section">
                     <div class="profile-info">
-                        <h1 style="font-size: 32px;">TalkNexus</h1>
-                        <span class="active-badge" style="font-size: 16px;">AI Chatbot Multi-Model Application</span>
+                        <h1 style="font-size: 38px;">TalkNexus</h1>
+                        <span class="active-badge" style="font-size: 20px;">AI Chatbot Multi-Model Application</span>
                     </div>
                 </div>
             </div>

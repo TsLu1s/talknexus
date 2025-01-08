@@ -1,9 +1,9 @@
 import streamlit as st
 import subprocess
 
-from .ollama_models_db import (get_model_info, 
-                               create_models_dataframe, 
-                               display_models_library)
+from schema.ollama_models_db import (get_model_info, 
+                                    create_models_dataframe, 
+                                    display_models_library)
 
 def get_available_models():
     try:
@@ -103,7 +103,7 @@ def run():
     <li>14B-33B models: 32GB RAM</li>
     <li>34B+ models: 64GB+ RAM</li>
     </ul>
-    Note: GPU acceleration (optional) can significantly improve inference speed.
+    Note: Having a GPU will make the models run much faster, but it's not required - they will still work on CPU.
     </p>
     </div>
     """, 

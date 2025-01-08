@@ -8,6 +8,7 @@ A comprehensive and scalable Streamlit Chatbot Application that integrates multi
 - **Model Management Interface**: Easy-to-use interface for downloading, managing, and switching between different language models.
 - **Real-time Chat Interface**:  Clean interface with model-specific chat history and streamed responses.
 - **RAG-Powered Document Analysis**: Advanced document processing system supporting PDF analysis with multiple embedding models for context-aware document querying and intelligent responses.
+- **Experiment Management**: Save, load, and track different document analysis configurations with customizable retrieval settings for reproducible results.
 - **Responsive Design**: Modern, responsive UI with animated components and intuitive navigation.
 
 ## 👏 Acknowledgments
@@ -101,8 +102,10 @@ streamlit run navegation.py
 
 1. Upload PDF documents for analysis
 2. Select embedding model and language model
-3. Ask questions about your documents
-4. Receive context-aware responses based on document content
+3. Configure retrieval settings with customizable chunk sizes and parent documents
+4. Save and manage experiments for reproducibility
+5. Ask questions about your documents
+6. Receive context-aware responses based on document content
 
 ![RAG Chat Interface](https://github.com/TsLu1s/talknexus/blob/main/imgs/rag_page.jpg)
 

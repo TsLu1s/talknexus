@@ -131,7 +131,7 @@ def run():
         <li>14B-33B models: 32GB RAM</li>
         <li>34B+ models: 64GB+ RAM</li>
         </ul>
-        Note: GPU acceleration (optional) can significantly improve inference speed.
+        Note: Having a GPU will make the models run much faster, but it's not required - they will still work on CPU.
         </p>
         </div>
         """, 
