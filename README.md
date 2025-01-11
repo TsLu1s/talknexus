@@ -1,4 +1,4 @@
-# TalkNexus: Ollama Multi-Model Chatbot & RAG Interface
+# TalkNexus: Ollama Chatbot Multi-Model & RAG Interface
 
 A comprehensive and scalable Streamlit Chatbot Application that integrates multiple language models through the Ollama API, featuring sophisticated model management, interactive chat interfaces, and RAG (Retrieval-Augmented Generation) capabilities for document analysis.
 
