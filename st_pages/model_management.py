@@ -2,20 +2,9 @@ import streamlit as st
 import subprocess
 
 from schema.ollama_models_db import (get_model_info, 
-                                    create_models_dataframe, 
-                                    display_models_library)
-
-def get_available_models():
-    try:
-        result = subprocess.run(['ollama', 'list'], capture_output=True, text=True)
-        models = result.stdout.strip().split('\n')[1:]  # Skip the header
-        # Filter out models with "NAME", "failed" or empty models
-        models = [model.split()[0] for model in models if "NAME" not in model and "failed"
-                  not in model and model.strip()]
-        return models
-    except Exception as e:
-        st.warning(f"Ollama is not running. Make sure to have Ollama API installed | Error fetching models: {e}")
-        return []
+                                     get_ollama_models,
+                                     create_models_dataframe, 
+                                     display_models_library)
 
 def pull_model(model_name):
     try:
@@ -73,7 +62,7 @@ def run():
     </div>
     """, unsafe_allow_html=True)
 
-    available_models = get_available_models()
+    available_models = get_ollama_models()
     if available_models:
         for model in available_models:
             with st.expander(f"📦 {model}"):
