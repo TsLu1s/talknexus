@@ -351,7 +351,7 @@ def run():
     """Render the application header."""
     st.markdown('''
     <div class="header-container">
-        <p class="header-subtitle">🔍 RAG - Powered PDF Chat Assistant</p>
+        <p class="header-subtitle">🔍 Powered PDF RAG Assistant </p>
     </div>
     ''', unsafe_allow_html=True)
     
