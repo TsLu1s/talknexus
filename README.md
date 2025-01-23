@@ -11,6 +11,8 @@ A comprehensive and scalable Chatbot Application that integrates multiple langua
 - **Experiment Management**: Save, load, and track different document analysis configurations with customizable retrieval settings for reproducible results.
 - **Responsive Design**: Modern, responsive UI with animated components and intuitive navigation.
 
+https://github.com/user-attachments/assets/46b20f63-505e-424c-a93a-df60ded20051
+
 ## 👏 Acknowledgments
 
 * [Ollama](https://ollama.com/)
@@ -80,23 +82,17 @@ streamlit run navegation.py
 - Access quick reference for hardware requirements
 - Find links to essential documentation and resources
 
-![Home Page](https://github.com/TsLu1s/talknexus/blob/main/imgs/home_page.jpg)
-
 ### Model Management
 1. Navigate to the "Language Models Management" section
 2. Select and download desired models from the available list
 3. Monitor installation progress and system requirements
 4. Manage installed models through the interface
 
-![Model Management](https://github.com/TsLu1s/talknexus/blob/main/imgs/models_page.jpg)
-
 ### Chat Interface
 1. Select a model from the dropdown menu
 2. Enter your message in the chat input
 3. View real-time responses in the chat window
 4. Switch between models as needed
-
-![Chat Interface](https://github.com/TsLu1s/talknexus/blob/main/imgs/chat_page.jpg)
 
 ### RAG Chat Interface
 
@@ -106,8 +102,6 @@ streamlit run navegation.py
 4. Save and manage experiments for reproducibility
 5. Ask questions about your documents
 6. Receive context-aware responses based on document content
-
-![RAG Chat Interface](https://github.com/TsLu1s/talknexus/blob/main/imgs/rag_page.jpg)
 
 ## 🤝 Contributing
 
