@@ -11,6 +11,8 @@ A comprehensive and scalable Chatbot Application that integrates multiple langua
 - **Experiment Management**: Save, load, and track different document analysis configurations with customizable retrieval settings for reproducible results.
 - **Responsive Design**: Modern, responsive UI with animated components and intuitive navigation.
 
+## 📽️ TalkNexus APP Video
+
 https://github.com/user-attachments/assets/46b20f63-505e-424c-a93a-df60ded20051
 
 ## 👏 Acknowledgments
