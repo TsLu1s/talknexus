@@ -3,6 +3,7 @@ from pandas.io.formats.style import Styler
 import streamlit as st
 import subprocess
 import requests
+
 def get_ollama_models() -> list:
     """
     Retrieves available models from Ollama API.
