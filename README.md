@@ -72,7 +72,7 @@ Visit Ollama API and follow the installation instructions for your operating sys
 
 5. **Start the Application**
 ```bash
-streamlit run navigation.py
+streamlit run navegation.py
 ```
 
 ## 💻 Usage & Architecture
