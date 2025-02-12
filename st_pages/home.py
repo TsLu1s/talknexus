@@ -20,7 +20,7 @@ def display_model_capabilities():
         "Language Models": {
             "Deepseek-R1": {
                 "capabilities": ["Advanced Reasoning", "General Intelligence", "Code Understanding"],
-                "description": "Flagship reasoning model family with state-of-the-art performance, featuring six dense models optimized for advanced reasoning and problem-solving",
+                "description": "Flagship reasoning model family with state-of-the-art performance, featuring six dense models optimized for advanced reasoning",
                 "icon": "🧠",
                 "tags": ["1.5B, 7B, 8B, 14B, 32B, 70B, 671B", "Reasoning", "High Performance"]
             },
