@@ -28,6 +28,10 @@ def get_ollama_models() -> list:
 
 def create_models_dataframe():
     models_info = {
+        'deepseek-r1': {
+            'description': "DeepSeek's first-generation of reasoning models with comparable performance to OpenAI-o1, including six dense models distilled from DeepSeek-R1 based on Llama and Qwen.",
+            'params': "1.5B, 7B, 8B, 14B, 32B, 70B, 671B"
+        },
         'llama3.2': {
             'description': "Meta's Llama 3.2 goes small with 1B and 3B models.",
             'params': "1B, 3B"
@@ -760,6 +764,20 @@ def display_models_library(df: pd.DataFrame):
 def get_model_info(model_name):
     try:
         result = subprocess.run(['ollama', 'show', model_name], capture_output=True, text=True)
+
+        if result.returncode != 0 or not result.stdout:
+            return "\n".join([
+                "",
+                "⚠️ Model Information Unavailable",
+                "-------------------------",
+                "Unable to fetch model details. The model might be:",
+                "• Still downloading",
+                "• Partially downloaded",
+                "• Not properly installed",
+                "",
+                f"You can try: 'ollama show {model_name}' in terminal for more details."
+            ])
+
         raw_info = result.stdout.strip()
         
         def get_value(key):

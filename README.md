@@ -4,7 +4,7 @@ A comprehensive and scalable Chatbot Application that integrates multiple langua
 
 ## 🌟 Key Features
 
-- **Multi-Model Support**: Seamlessly interact with various state-of-the-art Ollama language models including Llama, Mistral, Gemma, and 125+ more.
+- **Multi-Model Support**: Seamlessly interact with various state-of-the-art Ollama language models including DeepSeek, Llama, Mistral, and 125+ more.
 - **Model Management Interface**: Easy-to-use interface for downloading, managing, and switching between different language models.
 - **Real-time Chat Interface**:  Clean interface with model-specific chat history and streamed responses.
 - **RAG-Powered Document Analysis**: Advanced document processing system supporting PDF analysis with multiple embedding models for context-aware document querying and intelligent responses.
@@ -72,7 +72,7 @@ Visit Ollama API and follow the installation instructions for your operating sys
 
 5. **Start the Application**
 ```bash
-streamlit run navegation.py
+streamlit run navigation.py
 ```
 
 ## 💻 Usage & Architecture

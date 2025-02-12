@@ -18,17 +18,17 @@ def display_model_capabilities():
     
     capabilities = {
         "Language Models": {
-            "Llama 3.2": {
-                "capabilities": ["General Purpose AI", "Text Generation", "Code Completion"],
-                "description": "Versatile model optimized for broad applications and reasoning tasks",
-                "icon": "🦙",
-                "tags": ["7B-70B", "Versatile", "High Performance"]
+            "Deepseek-R1": {
+                "capabilities": ["Advanced Reasoning", "General Intelligence", "Code Understanding"],
+                "description": "Flagship reasoning model family with state-of-the-art performance, featuring six dense models optimized for advanced reasoning and problem-solving",
+                "icon": "🧠",
+                "tags": ["1.5B, 7B, 8B, 14B, 32B, 70B, 671B", "Reasoning", "High Performance"]
             },
-            "Gemma 2": {
-                "capabilities": ["Research", "Mathematical Reasoning", "Efficient Inference"],
-                "description": "Google's efficient model focused on research and mathematical tasks",
-                "icon": "💎",
-                "tags": ["2B-7B", "Efficient", "Research-Oriented"]
+            "Llama 3.1": {
+                "capabilities": ["General Purpose AI", "Text Generation", "Advanced Reasoning"],
+                "description": "State-of-the-art model from Meta with impressive performance across a wide range of tasks",
+                "icon": "🦙",
+                "tags": ["8B, 70B, 405B", "Versatile", "High Performance"]
             }
         },
         "Specialized Models": {
