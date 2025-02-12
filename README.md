@@ -23,7 +23,7 @@ https://github.com/user-attachments/assets/46b20f63-505e-424c-a93a-df60ded20051
 
 ## Streamlit Demo APP
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://talknexus-ai.streamlit.app/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://talknexus.streamlit.app/)
 
 ## 📋 Prerequisites
 
