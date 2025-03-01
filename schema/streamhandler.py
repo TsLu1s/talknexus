@@ -1,6 +1,8 @@
 from langchain.callbacks.base import BaseCallbackHandler
+import re
 import warnings
 warnings.filterwarnings("ignore", category=Warning)
+warnings.filterwarnings("ignore", message=".*st.rerun.*")
 
 class StreamHandler(BaseCallbackHandler):
     """
@@ -13,7 +15,14 @@ class StreamHandler(BaseCallbackHandler):
     def __init__(self, container):
         self.container = container
         self.text = ""
-        
+        self.in_thinking_section = False
+        self.buffer = ""
+    @staticmethod
+    def clean_response(response: str) -> str:
+        """Removes '<think>' reasoning parts from the response."""
+        response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
+        return response.strip()
+    
     def on_llm_new_token(self, token: str, **kwargs):
         """
         Processes each new token from the LLM response stream.
@@ -23,8 +32,31 @@ class StreamHandler(BaseCallbackHandler):
             **kwargs: Additional keyword arguments from the callback
         """
         try:
-            self.text += token
-            clean_text = self.text
+            # Check for thinking section markers
+            if "<think>" in token:
+                self.in_thinking_section = True
+                # Only add part of token before <think> if exists
+                before_think = token.split("<think>")[0]
+                if before_think:
+                    self.text += before_think
+                # Capture the rest in buffer without displaying
+                self.buffer = token[len(before_think):]
+                clean_text = self.text
+            elif "</think>" in token and self.in_thinking_section:
+                self.in_thinking_section = False
+                # Add part after </think> if exists
+                after_think = token.split("</think>")[1] if len(token.split("</think>")) > 1 else ""
+                if after_think:
+                    self.text += after_think
+                clean_text = self.text
+            elif self.in_thinking_section:
+                # If in thinking section, add to buffer but don't display
+                self.buffer += token
+                clean_text = self.text
+            else:
+                # Normal token processing
+                self.text += token
+                clean_text = self.text
             
             # Check if we need to clean up AIMessage formatting
             if "AIMessage" in clean_text:
@@ -38,12 +70,12 @@ class StreamHandler(BaseCallbackHandler):
                 
                 # Remove any remaining AIMessage wrapper
                 clean_text = (clean_text.replace("AIMessage(", "")
-                                      .replace(", additional_kwargs={}", "")
-                                      .replace(", response_metadata={})", "")
-                                      .replace('{ "data":' , "")
-                                      .replace('}' , "")
+                                        .replace(", additional_kwargs={}", "")
+                                        .replace(", response_metadata={})", "")
+                                        .replace('{ "data":' , "")
+                                        .replace('}' , "")
                 )
-            
+            #clean_text = self.clean_response(clean_text)
             # Update the display with cleaned text
             self.container.markdown(clean_text)
             

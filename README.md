@@ -7,6 +7,7 @@ A comprehensive and scalable Chatbot Application that integrates multiple langua
 - **Multi-Model Support**: Seamlessly interact with various state-of-the-art Ollama language models including DeepSeek, Llama, Mistral, and 125+ more.
 - **Model Management Interface**: Easy-to-use interface for downloading, managing, and switching between different language models.
 - **Real-time Chat Interface**:  Clean interface with model-specific chat history and streamed responses.
+- **Conversation History Management**: Save, load, and manage chat conversations with automatic titling and organized storage for easy access to previous interactions.
 - **RAG-Powered Document Analysis**: Advanced document processing system supporting PDF analysis with multiple embedding models for context-aware document querying and intelligent responses.
 - **Experiment Management**: Save, load, and track different document analysis configurations with customizable retrieval settings for reproducible results.
 - **Responsive Design**: Modern, responsive UI with animated components and intuitive navigation.
@@ -48,10 +49,10 @@ First, ensure you have Conda installed. Then create and activate a new environme
 
 ```bash
 # Create new environment
-conda create -n ollama_env python=3.10
+conda create -n talknexus_env python=3.10
 
 # Activate the environment
-conda activate ollama_env
+conda activate talknexus_env
 ```
 
 3. **Install Dependencies**
@@ -95,6 +96,11 @@ streamlit run navigation.py
 2. Enter your message in the chat input
 3. View real-time responses in the chat window
 4. Switch between models as needed
+5. Access conversation history
+   - Start new conversations
+   - Load previous conversations
+   - Continue ongoing conversations
+   - Delete unwanted conversations
 
 ### RAG Chat Interface
 

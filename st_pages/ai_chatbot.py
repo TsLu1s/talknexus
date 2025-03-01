@@ -1,57 +1,20 @@
 import streamlit as st
-from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import PromptTemplate
-from langchain_community.llms import Ollama
 from schema.streamhandler import StreamHandler
 from schema.ollama_models_db import get_ollama_models
+from schema.conversation_history import (get_conversation_chain,
+                                         on_model_change,
+                                         save_conversation,
+                                         load_saved_conversation_list,
+                                         load_conversation, 
+                                         delete_conversation)
 
-def get_conversation_chain(model_name: str) -> ConversationChain:
-    """
-    Initializes LangChain conversation chain with specified model.
-    
-    Args:
-        model_name (str): Name of Ollama model to use
-        
-    Returns:
-        ConversationChain: Configured conversation chain with memory and prompt template
-    """
-    # Set up Ollama LLM
-    llm = Ollama(
-        model=model_name,
-        temperature=0.2,
-        base_url="http://localhost:11434",
-        #system_prompt="You are a helpful AI assistant. Keep your answers brief and concise."
-    )
-        
-
-    prompt = PromptTemplate(
-        input_variables=["history", "input"], 
-        template="""Current conversation:
-                    {history}
-                    Human: {input}
-                    Assistant:""")
-
-    memory = ConversationBufferMemory(return_messages=True)
-    return ConversationChain(llm=llm, memory=memory, prompt=prompt, verbose=True)
-
-def on_model_change():
-    """
-    Callback function triggered when selected model changes.
-    
-    Resets conversation state by clearing message history and conversation chain
-    to start fresh with new model.
-    """
-    st.session_state.messages = []
-    st.session_state.conversation = None
+import warnings
+warnings.filterwarnings("ignore", category=Warning)
+warnings.filterwarnings("ignore", message=".*st.rerun.*")
 
 def run():
     """
-    Main function to run the Streamlit chat interface.
-    
-    Initializes UI components, manages conversation state, handles model selection,
-    and processes chat interactions. Implements real-time streaming of model responses
-    and maintains chat history.
+    Actual implementation of the chat interface.
     """
     st.markdown('''
     <div class="header-container">
@@ -64,7 +27,120 @@ def run():
         st.session_state.messages = []
     if 'conversation' not in st.session_state:
         st.session_state.conversation = None
-
+    if 'saved_conversations' not in st.session_state:
+        st.session_state.saved_conversations = []
+    if 'current_conversation_id' not in st.session_state:
+        st.session_state.current_conversation_id = "New_Conversation"
+    if 'conversation_title' not in st.session_state:
+        st.session_state.conversation_title = "New Conversation"
+    
+    # Load saved conversations on startup
+    if not st.session_state.saved_conversations:
+        load_saved_conversation_list()
+        
+    # Sidebar for conversation management
+    with st.sidebar:
+        st.title("Conversation History")
+        
+        # Action selector with options
+        action_options = ["🆕 New Conversation", "📂 Saved Conversations"]
+        
+        # Function to handle action selection
+        def on_action_change():
+            selected = st.session_state.action_selector
+            if selected == "🆕 New Conversation":
+                # Reset only the conversation-related state instead of all state
+                st.session_state.messages = []
+                
+                # Properly get a new conversation with the current model
+                if 'model_select' in st.session_state:
+                    model_name = st.session_state.model_select
+                    st.session_state.conversation = get_conversation_chain(model_name)
+                else:
+                    st.session_state.conversation = None
+                
+                # Reset conversation ID and title
+                st.session_state.current_conversation_id = "New_Conversation"
+                st.session_state.conversation_title = "New Conversation"
+                        
+        # Create a selectbox for actions
+        action_selection = st.selectbox(
+            "Choose an action:",
+            action_options,
+            index=0,
+            key="action_selector",
+            on_change=on_action_change
+        )
+                
+        # Display saved conversations
+        if action_selection == "📂 Saved Conversations":
+            if st.session_state.saved_conversations:
+                st.markdown("---")
+                #st.subheader("Saved Conversations")
+            
+            # Create a dictionary of display names to conversation IDs
+            convo_dict = {}
+            for item in st.session_state.saved_conversations:
+                if len(item) == 3:  # New format with 3 values
+                    convo_id, display_name, _ = item
+                else:  # Old format with 2 values
+                    convo_id, display_name = item
+                convo_dict[display_name] = convo_id
+            
+            # Add a default option
+            convo_options = ["Select Conversation"] + list(convo_dict.keys())
+            
+            # Create a selectbox for choosing conversations
+            # Always default to "Select Conversation" (index 0)
+            selected_convo = st.selectbox(
+                "Select a conversation to load or manage:",
+                convo_options,
+                index=0,
+                key="convo_selector"
+            )
+            
+            # Handle conversation selection
+            if selected_convo != "Select Conversation":
+                selected_id = convo_dict[selected_convo]
+                
+                # Initialize action selector state for this conversation if needed
+                action_key = f"action_{selected_id}_index"
+                if action_key not in st.session_state:
+                    st.session_state[action_key] = 0
+                
+                # Show management options for the selected conversation
+                convo_action_options = ["Select Action", "📝 Continue Conversation", "🗑️ Delete Conversation"]
+                
+                # Callback for conversation action change
+                def on_convo_action_change():
+                    selected_action = st.session_state[f"action_{selected_id}"]
+                    if selected_action == "📝 Continue Conversation":
+                        load_conversation(selected_id)
+                        st.session_state[f"action_{selected_id}_index"] = 0
+                    elif selected_action == "🗑️ Delete Conversation":
+                        # We don't call delete directly, we show the confirmation checkbox
+                        pass
+                
+                convo_action = st.selectbox(
+                    "Choose action:",
+                    convo_action_options,
+                    index=st.session_state[action_key],
+                    key=f"action_{selected_id}",
+                    on_change=on_convo_action_change
+                )
+                
+                # Only show confirmation checkbox for delete action
+                if convo_action == "🗑️ Delete Conversation":
+                    delete_confirm = st.checkbox("✓ Confirm deletion", key=f"confirm_delete_{selected_id}")
+                    if delete_confirm:
+                        if st.session_state.get(f"confirm_delete_{selected_id}", False):
+                            delete_conversation(selected_id)
+                            st.session_state[f"action_{selected_id}_index"] = 0
+                            st.rerun()
+            else:
+                if len(st.session_state.saved_conversations)==0:
+                    st.info("Conversation History is empty.")
+            
     # Get available models
     models = get_ollama_models()
     if not models:
@@ -83,7 +159,10 @@ def run():
             on_change=on_model_change,
             label_visibility="collapsed"
         )
-
+        
+    # Show current conversation title (but don't allow editing)
+    st.caption(f"**Current conversation:** {st.session_state.conversation_title}")
+        
     # Initialize conversation if needed
     if st.session_state.conversation is None:
         st.session_state.conversation = get_conversation_chain(model_name)
@@ -112,15 +191,21 @@ def run():
                 st.session_state.conversation.llm.callbacks = [stream_handler]
                 
                 # Generate response
-                response = st.session_state.conversation.run(prompt)
-                
+                response = stream_handler.clean_response(st.session_state.conversation.run(prompt))
+
                 # Clear the stream handler after generation
                 st.session_state.conversation.llm.callbacks = []
                 
                 # Add response to message history
                 st.session_state.messages.append({"role": "assistant", "content": response})
+                
+                # Automatically save the conversation after each message
+                save_conversation()
             
             except Exception as e:
                 error_message = f"Error generating response: {str(e)}"
                 response_placeholder.error(error_message)
                 st.session_state.messages.append({"role": "assistant", "content": error_message})
+                
+                # Still try to save even if there was an error
+                save_conversation()
