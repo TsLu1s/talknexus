@@ -62,7 +62,7 @@ pip install -r requirements.txt
 
 4. **Install Ollama**
    
-Visit Ollama API and follow the installation instructions for your operating system. **[Possible Restart PC needed]**
+Visit Ollama API and follow the installation instructions for your operating system.
 
 
 <div align="left">
