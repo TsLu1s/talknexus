@@ -1,3 +1,7 @@
+Capstone project in progress - chatbot interface forked from talknexus
+
+
+
 # TalkNexus: Ollama Chatbot Multi-Model & RAG Interface
 
 A comprehensive and scalable Chatbot Application that integrates multiple language models through the Ollama API, featuring sophisticated model management, interactive chat interfaces, and RAG (Retrieval-Augmented Generation) capabilities for document analysis.
