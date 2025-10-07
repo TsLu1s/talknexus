@@ -18,9 +18,11 @@ def get_ollama_models() -> list:
         response = requests.get("http://localhost:11434/api/tags")
         if response.status_code == 200:
             models = response.json()
+            print(models)
             return [model['name'] for model in models['models']
                     if all(keyword not in model['name'].lower()
-                        for keyword in ('failed', 'embed', 'bge'))]
+                        for keyword in ('failed', 'embed', 'bge'))
+            ]
         return []
     except:
         return []

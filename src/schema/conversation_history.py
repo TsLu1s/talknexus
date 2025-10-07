@@ -3,7 +3,6 @@ from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 from langchain_community.llms import Ollama
-from schema.streamhandler import StreamHandler
 from schema.ollama_models_db import get_ollama_models
 
 from datetime import datetime

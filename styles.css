@@ -1,19 +1,11 @@
-/* Modern color palette */
 :root {
     --primary-color: #374B5D;
-    /* Muted Navy */
     --secondary-color: #935F4C;
-    /* Tan */
-    --background-color: #FFFAE5;
-    /* Ivory */
+    --background-color: #0a0b2c;
     --text-color: #1B1821;
-    /* Black */
-    --accent-color: #E0D7C7;
-    /* Khaki */
+    --accent-color: #7ccc5e;
     --highlight-color: #F1E2AD;
-    /* Yellow */
-    --icon-color: #56382D;
-    /* Brown */
+    --icon-color: #39562d;
 }
 
 /* Global styles */
