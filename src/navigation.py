@@ -6,6 +6,7 @@ import imgs
 import st_pages.home
 import st_pages.ai_chatbot
 import st_pages.model_management # required modules
+import asyncio
 
 # Set page config
 st.set_page_config(page_title="Anti-Parasocial Chaperones", layout="wide", page_icon="🤖")
