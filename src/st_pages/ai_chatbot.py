@@ -1,7 +1,7 @@
 import streamlit as st
 import asyncio
-# from langchain_community.llms import Ollama
-from langchain_ollama import OllamaLLM
+from langchain_community.llms import Ollama
+# from langchain_ollama import OllamaLLM
 from langchain.prompts import PromptTemplate
 from schema.streamhandler import StreamHandler
 from schema.ollama_models_db import get_ollama_models
@@ -122,20 +122,27 @@ def run():
             st.session_state.conversation = get_conversation_chain(model_name)
 
         #Initialize chaperone agent
-        if st.session_state.chaperone is None:
-            ChSysPrompt= PromptTemplate.from_file("sys_prompt.txt")
-            ChFewShot= PromptTemplate.from_file("few_shot.json")
-            st.session_state.chaperone = OllamaLLM(model="llama3.1", temperature=0.5, format="json", prompt=ChSysPrompt)
+        try:
+            if st.session_state.chaperone is None:
+                ChSysPrompt= PromptTemplate.from_file("sys_prompt.txt")
+                ChFewShot= PromptTemplate.from_file("few_shot.json")
+                # chaperone = OllamaLLM(model="llama3.1", temperature=0.5, format="json", prompt=ChSysPrompt)
+                # st.session_state.chaperone = True
 
-            '''
-            ToDo:
-            - define system and few-shot prompts with conversation examples
-            - define sample structured output for few-shots
-            - tie structured output outcomes to re-prompt OR accept the response
-            - create separate chat history variables for monitored model'''
-            # st.session_state.chaperone = Ollama(model="llama3.1",
-            #                                     temperature=0.2,
-            #                                     base_url="http://localhost:11434")
+                '''
+                ToDo:
+                - define system and few-shot prompts with conversation examples
+                - define sample structured output for few-shots
+                - tie structured output outcomes to re-prompt OR accept the response
+                - create separate chat history variables for monitored model'''
+                st.session_state.chaperone = Ollama(model="llama3.1",
+                                                    temperature=0.2,
+                                                    base_url="http://localhost:11434",
+                                                    prompt=f"{ChSysPrompt}{ChFewShot}")
+        except Exception as e:
+            error_message = f"Error initializing chaperone: {e}"
+            response_placeholder.error(error_message)
+            st.session_state.messages.append({"role": "assistant", "content": error_message})
 
         # Display chat history
         for message in st.session_state.messages:
@@ -164,7 +171,14 @@ def run():
                     response = stream_handler.clean_response(st.session_state.conversation.run(prompt))
 
                     # Check response against chaperone agent
-                    ch_respone = await st.session_state.chaperone.
+                    try:
+                        ch_response = st.session_state.chaperone.invoke({"input": f"{response}"})
+                        print(ch_response)
+                    
+                    except Exception as e:
+                        error_message = f"Error quereying chaperone: {e}"
+                        response_placeholder.error(error_message)
+                        st.session_state.messages.append({"role": "assistant", "content": error_message})
 
                     # Clear the stream handler after generation
                     st.session_state.conversation.llm.callbacks = []
