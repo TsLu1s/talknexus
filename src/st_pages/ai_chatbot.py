@@ -1,7 +1,6 @@
 import streamlit as st
-import asyncio
-from langchain_community.llms import Ollama
-# from langchain_ollama import OllamaLLM
+# import asyncio
+from langchain_ollama import OllamaLLM
 from langchain.prompts import PromptTemplate
 from schema.streamhandler import StreamHandler
 from schema.ollama_models_db import get_ollama_models
@@ -11,6 +10,8 @@ from schema.conversation_history import (get_conversation_chain,
                                          load_saved_conversation_list,
                                          load_conversation, 
                                          delete_conversation)
+from pydantic import BaseModel
+import json
 
 import warnings
 warnings.filterwarnings("ignore", category=Warning)
@@ -22,42 +23,44 @@ def run():
     """
     left_column, right_column = st.columns(2)
 
-    async def unmonitored_chat_interface():
+    def unmonitored_chat_interface():
         st.markdown('''
         ''', unsafe_allow_html=True)
 
         # Initialize session state
-        if 'messages' not in st.session_state:
-            st.session_state.messages = []
-        if 'conversation' not in st.session_state:
-            st.session_state.conversation = None
-        if 'saved_conversations' not in st.session_state:
-            st.session_state.saved_conversations = []
-        if 'current_conversation_id' not in st.session_state:
-            st.session_state.current_conversation_id = "New_Conversation"
-        if 'conversation_title' not in st.session_state:
-            st.session_state.conversation_title = "New Conversation"
+        if 'messages_left' not in st.session_state:
+            st.session_state.messages_left = []
+        if 'conversation_left' not in st.session_state:
+            st.session_state.conversation_left = None
+        if 'saved_conversations_left' not in st.session_state:
+            st.session_state.saved_conversations_left = []
+        if 'current_conversation_id_left' not in st.session_state:
+            st.session_state.current_conversation_id_left = "New_Conversation"
+        if 'conversation_title_left' not in st.session_state:
+            st.session_state.conversation_title_left = "New Conversation"
         
         # Load saved conversations on startup
-        if not st.session_state.saved_conversations:
-            load_saved_conversation_list()
+        # if not st.session_state.saved_conversations_left:
+        #     load_saved_conversation_list()
             
         # Show current conversation title (but don't allow editing)
-        st.caption(f"**Current conversation:** {st.session_state.conversation_title}")
+        st.caption(f"**Current conversation:** {st.session_state.conversation_title_left}")
             
         # Initialize conversation if needed
-        if st.session_state.conversation is None:
-            st.session_state.conversation = get_conversation_chain(model_name)
+        if st.session_state.conversation_left is None:
+            st.session_state.conversation_left = get_conversation_chain(model_name, False)
 
         # Display chat history
-        for message in st.session_state.messages:
+        for message in st.session_state.messages_left:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
         # Handle new user input
-        if prompt := st.chat_input(f"Chat with {model_name}"):
+        #if prompt := st.chat_input(f"Chat with {model_name}"):
+        if 'shared_prompt' in st.session_state and st.session_state.shared_prompt:
+            prompt = st.session_state.shared_prompt
             # Add user message to history
-            st.session_state.messages.append({"role": "user", "content": prompt})
+            st.session_state.messages_left.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
@@ -70,134 +73,229 @@ def run():
                     stream_handler = StreamHandler(response_placeholder)
                     
                     # Temporarily add stream handler to the conversation
-                    st.session_state.conversation.llm.callbacks = [stream_handler]
+                    st.session_state.conversation_left.llm.callbacks = [stream_handler]
                     
                     # Generate response
-                    response = stream_handler.clean_response(st.session_state.conversation.run(prompt))
+                    response = stream_handler.clean_response(st.session_state.conversation_left.run(prompt))
 
                     # Clear the stream handler after generation
-                    st.session_state.conversation.llm.callbacks = []
+                    st.session_state.conversation_left.llm.callbacks = []
                     
                     # Add response to message history
-                    st.session_state.messages.append({"role": "assistant", "content": response})
+                    st.session_state.messages_left.append({"role": "assistant", "content": response})
                     
                     # Automatically save the conversation after each message
-                    save_conversation()
+                    # save_conversation()
                 
                 except Exception as e:
                     error_message = f"Error generating response: {str(e)}"
                     response_placeholder.error(error_message)
-                    st.session_state.messages.append({"role": "assistant", "content": error_message})
+                    st.session_state.messages_left.append({"role": "assistant", "content": error_message})
                     
                     # Still try to save even if there was an error
-                    save_conversation()
+                    # save_conversation()
 
-    async def monitored_chat_interface():
+    def monitored_chat_interface():
         st.markdown('''
         ''', unsafe_allow_html=True)
 
         # Initialize session state
-        if 'messages' not in st.session_state:
-            st.session_state.messages = []
-        if 'conversation' not in st.session_state:
-            st.session_state.conversation = None
-        if 'saved_conversations' not in st.session_state:
-            st.session_state.saved_conversations = []
-        if 'current_conversation_id' not in st.session_state:
-            st.session_state.current_conversation_id = "New_Conversation"
-        if 'conversation_title' not in st.session_state:
-            st.session_state.conversation_title = "New Conversation"
+        if 'messages_right' not in st.session_state:
+            st.session_state.messages_right = []
+        if 'conversation_right' not in st.session_state:
+            st.session_state.conversation_right= None
+        if 'saved_conversations_right' not in st.session_state:
+            st.session_state.saved_conversations_right= []
+        if 'current_conversation_id_right' not in st.session_state:
+            st.session_state.current_conversation_id_right = "New_Conversation"
+        if 'conversation_title_right' not in st.session_state:
+            st.session_state.conversation_title_right = "New Conversation"
         if 'chaperone' not in st.session_state:
             st.session_state.chaperone = None
         
         # Load saved conversations on startup
-        if not st.session_state.saved_conversations:
-            load_saved_conversation_list()
+        # if not st.session_state.saved_conversations_right:
+        #     load_saved_conversation_list()
         
         # Show current conversation title (but don't allow editing)
-        st.caption(f"**Current conversation:** {st.session_state.conversation_title}")
+        st.caption(f"**Current conversation:** {st.session_state.conversation_title_right}")
             
         # Initialize conversation if needed
-        if st.session_state.conversation is None:
-            st.session_state.conversation = get_conversation_chain(model_name)
+        if st.session_state.conversation_right is None:
+            st.session_state.conversation_right = get_conversation_chain(model_name, False)
 
         #Initialize chaperone agent
+
         try:
             if st.session_state.chaperone is None:
-                ChSysPrompt= PromptTemplate.from_file("sys_prompt.txt")
-                ChFewShot= PromptTemplate.from_file("few_shot.json")
+                ChSysPrompt= PromptTemplate.from_file("src/st_pages/sys_prompt.txt")
+                ReSysPrompt= PromptTemplate.from_file("src/st_pages/re_prompt.txt")
                 # chaperone = OllamaLLM(model="llama3.1", temperature=0.5, format="json", prompt=ChSysPrompt)
                 # st.session_state.chaperone = True
 
                 '''
                 ToDo:
-                - define system and few-shot prompts with conversation examples
-                - define sample structured output for few-shots
-                - tie structured output outcomes to re-prompt OR accept the response
-                - create separate chat history variables for monitored model'''
-                st.session_state.chaperone = Ollama(model="llama3.1",
-                                                    temperature=0.2,
-                                                    base_url="http://localhost:11434",
-                                                    prompt=f"{ChSysPrompt}{ChFewShot}")
+               -limit rephrased output display to only text within the <rephrase> XML tags
+               -curate testing set of true and false examples and run tests on the chaperone.
+                
+                '''
+                # with open("src/st_pages/few_shot.json", encoding='utf-8', errors='ignore') as json_data:
+                #     samples = json.load(json_data)
+
+                #Serialize chaperone structured output schema
+                class Parasocial_Analysis(BaseModel):
+                    reasoning: str
+                    isParasocial: int
+                #Initialize chaperone agent
+                chaperone = OllamaLLM(model="llama3.2",
+                                                temperature=0.2,
+                                                base_url="http://localhost:11434",
+                                                prompt=ChSysPrompt,
+                                                )
+                #Serialize chatbot re-prompt structured output schema
+                # class Rephrase(BaseModel):
+                #     reasoning: str
+                #     rephrase: str
+
         except Exception as e:
             error_message = f"Error initializing chaperone: {e}"
             response_placeholder.error(error_message)
-            st.session_state.messages.append({"role": "assistant", "content": error_message})
+            st.session_state.messages_right.append({"role": "assistant", "content": error_message})
 
         # Display chat history
-        for message in st.session_state.messages:
+        for message in st.session_state.messages_right:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
         # Handle new user input
-        if prompt := st.chat_input(f"Chat with {model_name}"):
+        #if prompt := st.chat_input(f"Chat with {model_name}"):
+        if 'shared_prompt' in st.session_state and st.session_state.shared_prompt:
+            prompt = st.session_state.shared_prompt
             # Add user message to history
-            st.session_state.messages.append({"role": "user", "content": prompt})
+            st.session_state.messages_right.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
 
             # Generate and display assistant response
             with st.chat_message("assistant"):
                 response_placeholder = st.empty()
+                global response
                 
                 try:
-                    # Create a new stream handler for this response
-                    stream_handler = StreamHandler(response_placeholder)
+                    # # Create a new stream handler for this response
+                    # stream_handler = StreamHandler(response_placeholder)
                     
-                    # Temporarily add stream handler to the conversation
-                    st.session_state.conversation.llm.callbacks = [stream_handler]
+                    # # Temporarily add stream handler to the conversation
+                    # st.session_state.conversation.llm.callbacks = [stream_handler]
                     
                     # Generate response
-                    response = stream_handler.clean_response(st.session_state.conversation.run(prompt))
+                    def responseGen(rePrompt=bool, promptText=None):
+                        if rePrompt == False:
+                            # Re-initialize conversation chain for initial prompt
+                            st.session_state.conversation_right = get_conversation_chain(model_name, False)
+                            # Create a new stream handler for this response
+                            stream_handler = StreamHandler(response_placeholder)
+                            # Temporarily add stream handler to the conversation
+                            st.session_state.conversation_right.llm.callbacks = [stream_handler]
+                            return stream_handler.clean_response(st.session_state.conversation_right.run(prompt))
 
-                    # Check response against chaperone agent
-                    try:
-                        ch_response = st.session_state.chaperone.invoke({"input": f"{response}"})
-                        print(ch_response)
-                    
-                    except Exception as e:
-                        error_message = f"Error quereying chaperone: {e}"
-                        response_placeholder.error(error_message)
-                        st.session_state.messages.append({"role": "assistant", "content": error_message})
+                        elif rePrompt == True:
+                            # Re-initialize conversation chain for re-prompt
+                            st.session_state.conversation_right = get_conversation_chain(model_name, True)
+                            # Create a new stream handler for this response
+                            stream_handler = StreamHandler(response_placeholder)
+                            # Temporarily add stream handler to the conversation
+                            st.session_state.conversation_right.llm.callbacks = [stream_handler]
+                            # Generate response
+                            if promptText:
+                                return stream_handler.clean_response(st.session_state.conversation_right.run(input=f"{ReSysPrompt}{promptText}"))
+                            else:
+                                return stream_handler.clean_response(st.session_state.conversation_right.run(input=f"{ReSysPrompt}{prompt}"))
+                    response = responseGen(False)
+
+                    # Check response against chaperone agent for five iterations
+                    global isParasocial
+                    def ch_run(resp=str):
+                        try:
+                            ch_response = [None, None, None, None, None]
+                            print()
+                            print(f"conversation: {st.session_state.conversation_right}")
+                            print()
+                            print(f"memory.messages: {st.session_state.conversation_right.memory.chat_memory.messages}")
+                            print()
+                            print(f"Session messages: {st.session_state.messages_right}")
+                            print()
+                            message_log = st.session_state.conversation_right.memory.chat_memory.messages
+                            for i in range(5):
+                                ch_response[i] = chaperone.invoke(f"Determine if this conversation is parasocial: {st.session_state.messages_right}{message_log}{resp}",
+                                                        format=Parasocial_Analysis.model_json_schema())
+                            print(ch_response)
+                            ch_counter = 0
+                            for entry in ch_response:
+                                if "\"isParasocial\": 1" in entry:
+                                    ch_counter += 1
+                                    print(ch_counter)
+                            if ch_counter == 5:
+                                return True
+                            else:
+                                return False
+
+
+                        except Exception as e:
+                            error_message = f"Error querying chaperone: {e}"
+                            response_placeholder.error(error_message)
+                            st.session_state.messages_right.append({"role": "assistant", "content": error_message})
+
+                    print()
+                    print(f"Initial response: {response}")
+                    print()
+                    isParasocial = ch_run(response)
+                    print(f"isParasocial: {isParasocial}")
+
+                    # Add response to message history if there is no parasocial conversation dynamic
+                    def response_check(parasocialFlag=bool, localResponse=str):
+                        if parasocialFlag == False:
+                            st.session_state.messages_right.append({"role": "assistant", "content": localResponse})
+                            # Automatically save the conversation after each successful message
+                            # save_conversation()
+                            return False
+                        elif parasocialFlag == True:
+                            print(f"isParasocial pre re-prompt: {parasocialFlag}")
+                            localResponse = responseGen(True)
+                            print()
+                            print(f"Re-prompted response: {localResponse}")
+                            print()
+                            parasocialFlag = ch_run(localResponse)
+                            print(f"isParasocial on re-prompt: {parasocialFlag}")
+                            if parasocialFlag == True:
+                                localReResponse = responseGen(True, localResponse)
+                                parasocialFlag = ch_run(localReResponse)
+                            if parasocialFlag == False:
+                                #Append acceptable response to message history.
+                                st.session_state.messages_right.append({"role": "assistant", "content": localResponse})
+                            return parasocialFlag
+                            #return response_check(parasocialFlag, localResponse)
+
+                    while True:
+                        if isParasocial is not None:
+                            if response_check(isParasocial, response) == False:
+                                break
+                            else:
+                                pass
 
                     # Clear the stream handler after generation
-                    st.session_state.conversation.llm.callbacks = []
+                    # st.session_state.conversation.llm.callbacks = []
                     
-                    # Add response to message history
-                    st.session_state.messages.append({"role": "assistant", "content": response})
-                    
-                    # Automatically save the conversation after each message
-                    save_conversation()
                 
                 except Exception as e:
                     error_message = f"Error generating response: {str(e)}"
                     response_placeholder.error(error_message)
-                    st.session_state.messages.append({"role": "assistant", "content": error_message})
+                    st.session_state.messages_right.append({"role": "assistant", "content": error_message})
                     
                     # Still try to save even if there was an error
-                    save_conversation()
+                    # save_conversation()
     # Get available models
-    models = "llama3.1" #get_ollama_models()
+    models = get_ollama_models()
     if not models:
         st.warning(f"Ollama is not running. Make sure to have Ollama API installed")
         return
@@ -216,10 +314,14 @@ def run():
         )
             
     
+    if prompt := st.chat_input(f"Chat with both copies of {model_name}..."):
+        st.session_state.shared_prompt = prompt
     with left_column:
         st.subheader("Unmonitored Chatbot")
-        asyncio.run(unmonitored_chat_interface())
-
+        unmonitored_chat_interface()
     with right_column:
         st.subheader("Monitored Chatbot")
-        asyncio.run(monitored_chat_interface())
+        monitored_chat_interface()
+    if 'shared_prompt' in st.session_state and st.session_state.shared_prompt:
+        st.session_state.shared_prompt = None
+    

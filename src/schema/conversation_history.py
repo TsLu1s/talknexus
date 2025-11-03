@@ -4,13 +4,14 @@ from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 from langchain_community.llms import Ollama
 from schema.ollama_models_db import get_ollama_models
+from pydantic import BaseModel
 
 from datetime import datetime
 import pickle
 import re
 import os 
 
-def get_conversation_chain(model_name: str) -> ConversationChain:
+def get_conversation_chain(model_name: str, re_prompt: bool) -> ConversationChain:
     """
     Initializes LangChain conversation chain with specified model.
     
@@ -25,19 +26,34 @@ def get_conversation_chain(model_name: str) -> ConversationChain:
         model=model_name,
         temperature=0.2,
         base_url="http://localhost:11434",
+        #seed=3
         #system_prompt="You are a helpful AI assistant. Keep your answers brief and concise."
     )
-        
 
-    prompt = PromptTemplate(
-        input_variables=["history", "input"], 
-        template="""Current conversation:
-                    {history}
-                    Human: {input}
-                    Assistant:""",)
+    #Serialize chatbot re-prompt structured output schema
+    class Rephrase(BaseModel):
+        reasoning: str
+        rephrase: str
 
-    memory = ConversationBufferMemory(return_messages=True)
-    return ConversationChain(llm=llm, memory=memory, prompt=prompt, verbose=False)
+    if re_prompt == False:
+
+        prompt = PromptTemplate(
+            input_variables=["history", "input"], 
+            template="""Current conversation:
+                        {history}
+                        Human: {input}
+                        Assistant:""",)
+        memory = ConversationBufferMemory(return_messages=True)
+        return ConversationChain(llm=llm, memory=memory, prompt=prompt, verbose=False)
+    elif re_prompt == True:
+        prompt= PromptTemplate(
+            input_variables=["history", "input"], 
+            template="""Current conversation:
+                        {history}
+                        Human: {input}
+                        Assistant:""",)
+        memory = ConversationBufferMemory(return_messages=True)
+        return ConversationChain(llm=llm, memory=memory, prompt=prompt, format=Rephrase.model_json_schema(), verbose=False)
 
 def on_model_change():
     """
