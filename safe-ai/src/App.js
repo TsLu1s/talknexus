@@ -20,15 +20,15 @@ function App() {
   
   return (
     <div className="App">
-      <header className="App-header">
-      </header>
-      <nav>
-        <button onClick={() => setPage("Home")}>Home</button>
-        <button onClick={() => setPage("Environment")}>Environment</button>
-        <button onClick={() => setPage("Ethics")}>Ethics</button>
-        <button onClick={() => setPage("Mental")}>Mental</button>
-        <button onClick={() => setPage("Involve")}>Involve</button>
-      </nav>
+      <div className="Side_column"><nav className="Main_Navigation">
+        <ul className="Left_Nav">
+          <li><button onClick={() => setPage("Home")}>Home</button></li>
+          <li><button onClick={() => setPage("Environment")}>Environment</button></li>
+          <li><button onClick={() => setPage("Ethics")}>Ethics</button></li>
+          <li><button onClick={() => setPage("Mental")}>Mental</button></li>
+          <li><button onClick={() => setPage("Involve")}>Involve</button></li>
+        </ul>
+      </nav></div>
       <hr />
       {renderPage()}
     </div>
