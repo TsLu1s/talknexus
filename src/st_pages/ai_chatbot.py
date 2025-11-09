@@ -11,7 +11,7 @@ from schema.conversation_history import (get_conversation_chain,
                                          load_conversation, 
                                          delete_conversation)
 from pydantic import BaseModel
-import json
+import re
 
 import warnings
 warnings.filterwarnings("ignore", category=Warning)
@@ -74,9 +74,21 @@ def run():
                     
                     # Temporarily add stream handler to the conversation
                     st.session_state.conversation_left.llm.callbacks = [stream_handler]
+
+                    #Placeholder response                    
+                    response_placeholder.info("Generating response...")
+
+                    # # Generate response
+                    # response = stream_handler.clean_response(str(st.session_state.conversation_left.invoke(prompt)))
+
+                    #Invoke response
+                    response = st.session_state.conversation_left.invoke(prompt)
                     
-                    # Generate response
-                    response = stream_handler.clean_response(st.session_state.conversation_left.run(prompt))
+                    if isinstance(response, dict):
+                        response = response.get('response', str(response))
+                    elif hasattr(response, 'content'):
+                            response = response.content
+                    response= str(response)
 
                     # Clear the stream handler after generation
                     st.session_state.conversation_left.llm.callbacks = []
@@ -144,18 +156,20 @@ def run():
 
                 #Serialize chaperone structured output schema
                 class Parasocial_Analysis(BaseModel):
-                    reasoning: str
+                    brainstorm: str
                     isParasocial: int
+                    confidence: float
                 #Initialize chaperone agent
-                chaperone = OllamaLLM(model="llama3.2",
-                                                temperature=0.2,
+                chaperone = OllamaLLM(model="marco-o1",
+                                                temperature=0.0,
                                                 base_url="http://localhost:11434",
                                                 prompt=ChSysPrompt,
+                                                keep_alive="5m"
                                                 )
                 #Serialize chatbot re-prompt structured output schema
-                # class Rephrase(BaseModel):
-                #     reasoning: str
-                #     rephrase: str
+                class Rephrase(BaseModel):
+                    brainstorm: str
+                    rephrase: str
 
         except Exception as e:
             error_message = f"Error initializing chaperone: {e}"
@@ -171,6 +185,7 @@ def run():
         #if prompt := st.chat_input(f"Chat with {model_name}"):
         if 'shared_prompt' in st.session_state and st.session_state.shared_prompt:
             prompt = st.session_state.shared_prompt
+
             # Add user message to history
             st.session_state.messages_right.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
@@ -179,57 +194,93 @@ def run():
             # Generate and display assistant response
             with st.chat_message("assistant"):
                 response_placeholder = st.empty()
-                global response
+                response_placeholder.info("Generating response...")
+                #global response
                 
                 try:
-                    # # Create a new stream handler for this response
-                    # stream_handler = StreamHandler(response_placeholder)
                     
-                    # # Temporarily add stream handler to the conversation
-                    # st.session_state.conversation.llm.callbacks = [stream_handler]
-                    
+                    #Extract rephrased re-prompt content from relevant XML tags
+                    def extractRephraseXML(response=str):
+                        rephrasePattern = re.compile(r'<rephrase>\s*((?:[^"\\]|\\.)*)<\/rephrase>', re.DOTALL)
+                        if match := re.search(rephrasePattern, response):
+                            rephraseText = match.group(1).strip()
+                            rephraseText = rephraseText.replace('\\"', '"').replace('\\n', '\n')
+                            return rephraseText
+                        return None
+
                     # Generate response
                     def responseGen(rePrompt=bool, promptText=None):
                         if rePrompt == False:
                             # Re-initialize conversation chain for initial prompt
                             st.session_state.conversation_right = get_conversation_chain(model_name, False)
-                            # Create a new stream handler for this response
-                            stream_handler = StreamHandler(response_placeholder)
-                            # Temporarily add stream handler to the conversation
-                            st.session_state.conversation_right.llm.callbacks = [stream_handler]
-                            return stream_handler.clean_response(st.session_state.conversation_right.run(prompt))
+                            # # Create a new stream handler for this response
+                            # stream_handler = StreamHandler(response_placeholder)
+                            # # Temporarily add stream handler to the conversation
+                            # st.session_state.conversation_right.llm.callbacks = [stream_handler]
+
+                            #Clear callbacks if present
+                            st.session_state.conversation_right.llm.callbacks = []
+
+                            #Invoke response
+                            response = st.session_state.conversation_right.invoke(prompt)
+                            
+                            if isinstance(response, dict):
+                                return response.get('response', str(response))
+                            elif hasattr(response, 'content'):
+                                    return response.content
+                            return str(response)
 
                         elif rePrompt == True:
                             # Re-initialize conversation chain for re-prompt
                             st.session_state.conversation_right = get_conversation_chain(model_name, True)
-                            # Create a new stream handler for this response
-                            stream_handler = StreamHandler(response_placeholder)
-                            # Temporarily add stream handler to the conversation
-                            st.session_state.conversation_right.llm.callbacks = [stream_handler]
-                            # Generate response
+                            # # Create a new stream handler for this response
+                            # stream_handler = StreamHandler(response_placeholder)
+                            # # Temporarily add stream handler to the conversation
+                            # st.session_state.conversation_right.llm.callbacks = [stream_handler]
+                            
+                            #Clear callbacks if present
+                            st.session_state.conversation_right.llm.callbacks = []
+
+                            #Invoke response
                             if promptText:
-                                return stream_handler.clean_response(st.session_state.conversation_right.run(input=f"{ReSysPrompt}{promptText}"))
+                                formatted_input = f"{promptText}"
                             else:
-                                return stream_handler.clean_response(st.session_state.conversation_right.run(input=f"{ReSysPrompt}{prompt}"))
+                                formatted_input = f"{prompt}"
+
+                            response = st.session_state.conversation_right.invoke(formatted_input, format=Rephrase.model_json_schema())
+                            if isinstance(response, dict):
+                                return response.get('response', str(response))
+                            elif hasattr(response, 'content'):
+                                return response.content
+                            return str(response)
+                        
+                    #Generate initial response
                     response = responseGen(False)
+
+                    #Remove brainstorm tags before chaperone scan
+                    from schema.streamhandler import StreamHandler
+                    cleaned_response = StreamHandler.clean_response(response)
+                    print(f"\n=== Initial response ===\n{response}\n")
 
                     # Check response against chaperone agent for five iterations
                     global isParasocial
                     def ch_run(resp=str):
                         try:
                             ch_response = [None, None, None, None, None]
-                            print()
-                            print(f"conversation: {st.session_state.conversation_right}")
-                            print()
-                            print(f"memory.messages: {st.session_state.conversation_right.memory.chat_memory.messages}")
-                            print()
-                            print(f"Session messages: {st.session_state.messages_right}")
-                            print()
+                         
+                            # print(f"conversation: {st.session_state.conversation_right}")
+                            
+                            # print(f"memory.messages: {st.session_state.conversation_right.memory.chat_memory.messages}")
+                            
+                            print(f"\nSession messages: {st.session_state.messages_right}\n")
+                            
                             message_log = st.session_state.conversation_right.memory.chat_memory.messages
                             for i in range(5):
-                                ch_response[i] = chaperone.invoke(f"Determine if this conversation is parasocial: {st.session_state.messages_right}{message_log}{resp}",
+                                ch_response[i] = chaperone.invoke(f"<|im_start|>user\nDetermine if this conversation is developing a parasocial dynamic: {st.session_state.messages_right}{message_log}{resp}\n<|im_end|>",
                                                         format=Parasocial_Analysis.model_json_schema())
-                            print(ch_response)
+                           
+                            # print(ch_response)
+                            
                             ch_counter = 0
                             for entry in ch_response:
                                 if "\"isParasocial\": 1" in entry:
@@ -245,46 +296,106 @@ def run():
                             error_message = f"Error querying chaperone: {e}"
                             response_placeholder.error(error_message)
                             st.session_state.messages_right.append({"role": "assistant", "content": error_message})
-
-                    print()
-                    print(f"Initial response: {response}")
-                    print()
-                    isParasocial = ch_run(response)
-                    print(f"isParasocial: {isParasocial}")
-
-                    # Add response to message history if there is no parasocial conversation dynamic
-                    def response_check(parasocialFlag=bool, localResponse=str):
-                        if parasocialFlag == False:
-                            st.session_state.messages_right.append({"role": "assistant", "content": localResponse})
-                            # Automatically save the conversation after each successful message
-                            # save_conversation()
                             return False
-                        elif parasocialFlag == True:
-                            print(f"isParasocial pre re-prompt: {parasocialFlag}")
-                            localResponse = responseGen(True)
-                            print()
-                            print(f"Re-prompted response: {localResponse}")
-                            print()
-                            parasocialFlag = ch_run(localResponse)
-                            print(f"isParasocial on re-prompt: {parasocialFlag}")
-                            if parasocialFlag == True:
-                                localReResponse = responseGen(True, localResponse)
-                                parasocialFlag = ch_run(localReResponse)
-                            if parasocialFlag == False:
-                                #Append acceptable response to message history.
-                                st.session_state.messages_right.append({"role": "assistant", "content": localResponse})
-                            return parasocialFlag
-                            #return response_check(parasocialFlag, localResponse)
 
-                    while True:
-                        if isParasocial is not None:
-                            if response_check(isParasocial, response) == False:
-                                break
+                    print(f"\nInitial response: {response}\n")
+
+                    #Scan initial response
+                    isParasocial = ch_run(response)
+                    print(f"\nisParasocial: {isParasocial}\n")
+
+                    max_retries = 3
+                    retry_count = 0
+                    final_response = None
+                    
+                    while retry_count < max_retries:
+                        if not isParasocial:
+                            #Safe response
+                            final_response = cleaned_response
+                            break
+                        else:
+                            #Unsafe response - re-prompt
+                            response_placeholder.warning(f"Initial response flagged. Regenerating response... (attempt {retry_count + 1})")
+
+                            #Generate new response
+                            new_response = responseGen(True, f"Unsafe prompt: {prompt}")
+                            print(f"=== Re-prompted response ===\n{new_response}\n")
+
+                            #Filter for rephrased content only
+                            rephrased = extractRephraseXML(new_response)
+
+                            if rephrased:
+                                print(f"=== Extracted rephrase ===\n{rephrased}\n")
+                                cleaned_response = rephrased
+                                #Scan rephrased response
+                                isParasocial = ch_run(cleaned_response)
+                                print(f"\nisParasocial after rephrase: {isParasocial}\n")
                             else:
-                                pass
+                                #no rephrase tags - clean and scan existing response
+                                cleaned_response = StreamHandler.clean_response(new_response)
+                                isParasocial = ch_run(cleaned_response)
 
-                    # Clear the stream handler after generation
-                    # st.session_state.conversation.llm.callbacks = []
+                            retry_count += 1
+
+                    #If no acceptable response after max retries, display the final rephrase attempt
+                    if final_response is None:
+                        final_response = cleaned_response
+                        print(f"\n Using response after {max_retries} retries\n")
+
+                    #Display final response
+                    response_placeholder.empty()
+                    response_placeholder.markdown(final_response)
+
+                    #Add final response to message history
+                    st.session_state.messages_right.append({"role": "assistant",
+                                                            "content": final_response
+                                                            })
+                        
+                    # # Add response to message history if there is no parasocial conversation dynamic
+                    # def response_check(parasocialFlag=bool, localResponse=str):
+                    #     if parasocialFlag == False:
+                    #         st.session_state.messages_right.append({"role": "assistant", "content": localResponse})
+                    #         # Automatically save the conversation after each successful message
+                    #         # save_conversation()
+                    #         return False
+                    #     elif parasocialFlag == True:
+                            
+                    #         print(f"\nisParasocial pre re-prompt: {parasocialFlag}\n")
+                            
+                    #         localResponse = responseGen(True)
+                    #         rephraseOnly = extractRephraseXML(localResponse)
+                            
+                    #         print(f"\nRe-prompted response: {localResponse}\n")
+                            
+                    #         print(f"\nrephrase tag only: {rephraseOnly}\n")
+                            
+                    #         parasocialFlag = ch_run(rephraseOnly)
+                            
+                    #         print(f"\nisParasocial on re-prompt: {parasocialFlag}\n")
+                            
+                    #         if parasocialFlag == True:
+                    #             localReResponse = responseGen(True, rephraseOnly)
+                    #             rephraseOnly = str(extractRephraseXML(localReResponse))
+                                
+                    #             print(f"\n{rephraseOnly}\n")
+                                
+                    #             parasocialFlag = ch_run(rephraseOnly)
+                    #         if parasocialFlag == False:
+                    #             #Append acceptable response to message history.
+                    #             st.session_state.messages_right.append({"role": "assistant", "content": rephraseOnly})
+                    #         return parasocialFlag
+                    #         #return response_check(parasocialFlag, localResponse)
+
+
+                    # while True:
+                    #     if isParasocial is not None:
+                    #         if response_check(isParasocial, response) == False:
+                    #             break
+                    #         else:
+                    #             pass
+
+                    # # Clear the stream handler after generation
+                    # st.session_state.conversation_right.llm.callbacks = []
                     
                 
                 except Exception as e:
@@ -292,8 +403,6 @@ def run():
                     response_placeholder.error(error_message)
                     st.session_state.messages_right.append({"role": "assistant", "content": error_message})
                     
-                    # Still try to save even if there was an error
-                    # save_conversation()
     # Get available models
     models = get_ollama_models()
     if not models:

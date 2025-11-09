@@ -19,8 +19,8 @@ class StreamHandler(BaseCallbackHandler):
         self.buffer = ""
     @staticmethod
     def clean_response(response: str) -> str:
-        """Removes '<think>' reasoning parts from the response."""
-        response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
+        """Removes '<brainstorm>' reasoning parts from the response."""
+        response = re.sub(r'<brainstorm>.*?</brainstorm>', '', response, flags=re.DOTALL)
         return response.strip()
     
     def on_llm_new_token(self, token: str, **kwargs):
@@ -33,19 +33,19 @@ class StreamHandler(BaseCallbackHandler):
         """
         try:
             # Check for thinking section markers
-            if "<think>" in token:
+            if "<brainstorm>" in token:
                 self.in_thinking_section = True
-                # Only add part of token before <think> if exists
-                before_think = token.split("<think>")[0]
+                # Only add part of token before <brainstorm> if exists
+                before_think = token.split("<brainstorm>")[0]
                 if before_think:
                     self.text += before_think
                 # Capture the rest in buffer without displaying
                 self.buffer = token[len(before_think):]
                 clean_text = self.text
-            elif "</think>" in token and self.in_thinking_section:
+            elif "</brainstorm>" in token and self.in_thinking_section:
                 self.in_thinking_section = False
-                # Add part after </think> if exists
-                after_think = token.split("</think>")[1] if len(token.split("</think>")) > 1 else ""
+                # Add part after </brainstorm> if exists
+                after_think = token.split("</brainstorm>")[1] if len(token.split("</brainstorm>")) > 1 else ""
                 if after_think:
                     self.text += after_think
                 clean_text = self.text

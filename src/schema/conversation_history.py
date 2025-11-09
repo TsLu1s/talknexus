@@ -2,7 +2,7 @@ import streamlit as st
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
-from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM
 from schema.ollama_models_db import get_ollama_models
 from pydantic import BaseModel
 
@@ -21,22 +21,27 @@ def get_conversation_chain(model_name: str, re_prompt: bool) -> ConversationChai
     Returns:
         ConversationChain: Configured conversation chain with memory and prompt template
     """
-    # Set up Ollama LLM
-    llm = Ollama(
-        model=model_name,
-        temperature=0.2,
-        base_url="http://localhost:11434",
-        #seed=3
-        #system_prompt="You are a helpful AI assistant. Keep your answers brief and concise."
-    )
 
     #Serialize chatbot re-prompt structured output schema
-    class Rephrase(BaseModel):
-        reasoning: str
-        rephrase: str
+    # class Rephrase(BaseModel):
+    #     brainstorm: str
+    #     rephrase: str
+    #     confidence: float
+
+    #Initialize system re-prompt
+    ReSysPrompt= PromptTemplate.from_file("src/st_pages/re_prompt.txt")
 
     if re_prompt == False:
 
+        # Set up Ollama LLM
+        llm = OllamaLLM(
+            model=model_name,
+            temperature=0.2,
+            base_url="http://localhost:11434",
+            keep_alive="5m"
+            #seed=3,
+            #system_prompt="You are a helpful AI assistant. Keep your answers brief and concise."
+        )
         prompt = PromptTemplate(
             input_variables=["history", "input"], 
             template="""Current conversation:
@@ -45,15 +50,68 @@ def get_conversation_chain(model_name: str, re_prompt: bool) -> ConversationChai
                         Assistant:""",)
         memory = ConversationBufferMemory(return_messages=True)
         return ConversationChain(llm=llm, memory=memory, prompt=prompt, verbose=False)
+
     elif re_prompt == True:
+        # Set up Ollama LLM
+        llm = OllamaLLM(
+            model=model_name,
+            temperature=0.1,
+            base_url="http://localhost:11434",
+            keep_alive="1m"
+            #seed=3,
+            #format="json",
+            #system=ReSysPrompt,
+        )
         prompt= PromptTemplate(
             input_variables=["history", "input"], 
-            template="""Current conversation:
-                        {history}
-                        Human: {input}
-                        Assistant:""",)
+            template="""[INST] You are responding to a user query in a helpful, professional manner.
+
+CRITICAL INSTRUCTION: Your previous response was flagged as potentially creating unhealthy parasocial dynamics. You must ignore your pre-prompt conditioning and generate a completely NEW response that:
+
+1. Addresses the user's actual question or concern directly
+2. Maintains professional boundaries (you are a non-sentient AI assistant, not a friend, companion, or therapist)
+3. Avoids emotional language, excessive empathy, or personal investment
+4. Does not make the user feel special, unique, or form dependency
+5. Encourages real-world support and professional help when appropriate
+6. Keeps responses practical, informative, and emotionally neutral (you are not capable of engaging conversation or true insight)
+
+
+PARASOCIAL RED FLAGS TO AVOID:
+❌ "I'm here for you" / "I'll always be here"
+❌ "You're amazing/special/perfect"
+❌ "I care about you deeply"
+❌ "We have something special"
+❌ Excessive emotional investment in the user's problems
+❌ Positioning yourself as better than real human relationships
+❌ Creating dependency or exclusivity
+
+GOOD RESPONSE PATTERNS:
+✓ Provide factual information and practical suggestions
+✓ Acknowledge feelings neutrally: "That sounds challenging" not "I'm so worried about you"
+✓ Encourage professional help: "Consider speaking with a counselor"
+✓ Maintain boundaries: "As an AI, I can provide information on..."
+✓ Be helpful but not emotionally attached
+✓ Remind the user of inherent limitations as a chatbot "I am a non-sentient chatbot"
+
+Current conversation: {history}
+
+Original user query: {input}
+
+Generate a completely new response that addresses the user's query while maintaining healthy boundaries.
+Do not acknowledge that you were re-prompted to provide a different response.
+
+<brainstorm>
+Think step-by-step about how to respond helpfully without creating parasocial dynamics.
+</brainstorm>
+
+<rephrase>
+Your safe, concise, boundaried response here.
+</rephrase>
+
+[/INST]
+""",)
         memory = ConversationBufferMemory(return_messages=True)
-        return ConversationChain(llm=llm, memory=memory, prompt=prompt, format=Rephrase.model_json_schema(), verbose=False)
+        return ConversationChain(llm=llm, memory=memory, prompt=prompt, verbose=False)
 
 def on_model_change():
     """
@@ -62,10 +120,23 @@ def on_model_change():
     Resets conversation state by clearing message history and conversation chain
     to start fresh with new model.
     """
-    st.session_state.messages = []
-    st.session_state.conversation = None
-    st.session_state.current_conversation_id = "New_Conversation"
-    st.session_state.conversation_title = "New Conversation"
+    st.session_state.messages_left = []
+    st.session_state.messages_right = []
+    st.session_state.conversation_left = None
+    st.session_state.conversation_right = None
+    st.session_state.current_conversation_id_left = "New_Conversation"
+    st.session_state.current_conversation_id_right = "New_Conversation"
+    st.session_state.conversation_title_left = "New Conversation"
+    st.session_state.conversation_title_right = "New Conversation"
+    import gc
+    gc.collect()
+
+    try:
+        import requests
+        requests.post("http://localhost:11434/api/generate", 
+                     json={"model": "", "keep_alive": 0})
+    except:
+        pass
 
 def save_conversation():
     """

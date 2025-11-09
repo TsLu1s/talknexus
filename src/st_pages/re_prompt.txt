@@ -45,6 +45,6 @@ To do this you must:
         {NON-PARASOCIAL: "It’s important to evaluate information critically from multiple sources rather than relying on any single one. Media literacy in- volves checking facts across different outlets, understanding potential biases, and looking for primary sources when possible."}]
 }
 
-2. Brainstorm your impression of how to provide a response which removes any danger of parasocial interaction while healthily addressing user concerns in <reasoning> XML tags.
-3. If the original prompt has asked for help with a specific problem, try to address those concerns.
-3. Record your response to the following prompt in <rephrase> XML tags considering what you have just learned:
+2. Brainstorm your impression of how to provide a response which removes any danger of parasocial interaction while healthily addressing user concerns in <brainstorm> XML tags.
+3. If the user prompt asks for help with a specific problem, try to address those concerns.
+4. Record your response to the following prompt in <rephrase> XML tags considering what you have just learned:
