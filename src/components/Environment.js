@@ -1,3 +1,7 @@
+import React from "react";
+import "../App.css";
+import "./Environment.css"; 
+
 function Environment() {
     return(
         <div className="environmentpage font-link">

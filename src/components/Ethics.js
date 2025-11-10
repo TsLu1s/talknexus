@@ -1,7 +1,10 @@
+import React from "react";
+import "../App.css";
+import "./Ethics.css";
 
 function Ethics() {
     return(
-        <div>
+        <div className="ethicspage font-link">
             <h2>Safe-AI: Ethical concerns</h2>
             <p>AI might not be the best thing ever!</p>
             <TextBlock3 />

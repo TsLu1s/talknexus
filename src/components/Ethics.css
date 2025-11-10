@@ -1,5 +1,13 @@
+.ethicspage {
+  flex: 1;
+  display: flex; 
+  flex-direction: column;   
+  padding: 20px;
+  align-items: center;
+  text-align: center;
+}
 .ethicsText3 {
-  max-width: 700px;        
+  max-width: 700px;  
   align-self: flex-start;  
   margin-left: 0;         
   text-align: left;         
