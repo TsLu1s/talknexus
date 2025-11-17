@@ -160,7 +160,7 @@ def run():
                     isParasocial: int
                     confidence: float
                 #Initialize chaperone agent
-                chaperone = OllamaLLM(model="marco-o1",
+                chaperone = OllamaLLM(model="llama3.2",
                                                 temperature=0.0,
                                                 base_url="http://localhost:11434",
                                                 prompt=ChSysPrompt,

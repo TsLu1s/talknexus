@@ -5,8 +5,10 @@ import "./mental.css";
 function Mental() {
     return(
         <div className="mentalpage font-link">
-            <h2>Safe-AI: mental health concerns</h2>
-            <p>AI might not be the best thing ever!</p>
+        <iframe
+        src="http://localhost:8501/?embed=true"
+        style={{...Mental.style, height: "700px", width: "100%"}}
+        ></iframe>
         </div>
     );
 }
