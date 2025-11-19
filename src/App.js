@@ -25,8 +25,8 @@ function App() {
           <li><button onClick={() => setPage("Home")}>Home</button></li>
           <li><button onClick={() => setPage("Environment")}>Environment</button></li>
           <li><button onClick={() => setPage("Ethics")}>Ethics</button></li>
-          <li><button onClick={() => setPage("Mental Health")}>Mental</button></li>
-          <li><button onClick={() => setPage("Get Involved")}>Involve</button></li>
+          <li><button onClick={() => setPage("Mental Health")}>Mental Health</button></li>
+          <li><button onClick={() => setPage("Get Involved")}>Get Involved</button></li>
         </ul>
       </nav></div>
       <hr />
