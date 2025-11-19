@@ -14,10 +14,10 @@ function App() {
     if (page === "Home") return <Home />;
     if (page === "Environment") return <Environment />;
     if (page === "Ethics") return <Ethics />;
-    if (page === "Mental Health") return <Mental />;
-    if (page === "Get Involved") return <Involve />;
+    if (page === "Mental") return <Mental />;
+    if (page === "Involve") return <Involve />;
   };
-  
+ 
   return (
     <div className="App">
       <div className="Side_column"><nav className="Main_Navigation">
