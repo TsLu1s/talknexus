@@ -22,11 +22,11 @@ function App() {
     <div className="App">
       <div className="Side_column"><nav className="Main_Navigation">
         <ul className="Left_Nav">
-          <li><button onClick={() => setPage("Home")}>Home</button></li>
-          <li><button onClick={() => setPage("Environment")}>Environment</button></li>
-          <li><button onClick={() => setPage("Ethics")}>Ethics</button></li>
-          <li><button onClick={() => setPage("Mental")}>Mental</button></li>
-          <li><button onClick={() => setPage("Involve")}>Involve</button></li>
+        <li><button className={page==="Home" ? "active" : ""}onClick={() => setPage("Home")}>Home</button></li>
+          <li><button className={page==="Environment" ? "active" : ""}onClick={() => setPage("Environment")}>Environmental</button></li>
+          <li><button className={page==="Ethics" ? "active" : ""}onClick={() => setPage("Ethics")}>Ethics</button></li>
+          <li><button className={page==="Mental" ? "active" : ""}onClick={() => setPage("Mental")}>Mental Health</button></li>
+          <li><button className={page==="Involve" ? "active" : ""}onClick={() => setPage("Involve")}>Get Involved</button></li>
         </ul>
       </nav></div>
       <hr />
