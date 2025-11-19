@@ -24,17 +24,31 @@
 
 .Left_Nav {
   list-style-type: none;
+  padding-left: 0px;
 }
 
-.Left_Nav li {
-  padding-bottom: 10px;
+.Left_Nav button {
+  padding-bottom: 50px;
+  padding-top:50px;
+  background: #344F1F;
+  cursor: pointer;
+  border: none;
+  color: wheat;
+  font-family:Georgia, 'Times New Roman', Times, serif;
+  font-size:20px;
+  width:210px;
+}
+
+.Left_Nav button.active{
+  background: #547f33;
+  color: white;
 }
 
 .Side_column {
   background-color: #344F1F;
   width: 200px;
   padding: 10px;
-  min-height: 100vh;
+  min-height: 90vh;
 }
 
 .App {
