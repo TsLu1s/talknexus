@@ -19,3 +19,27 @@ h2 {
     font-size: 2.5rem;
     margin-bottom: 0px;
 }
+
+.row {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.column {
+  float: left;
+  width: 50%; 
+}
+
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.column img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+

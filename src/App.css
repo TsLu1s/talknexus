@@ -53,7 +53,8 @@
 
 .App {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
+  min-height: 100vh;
   background-color: #F2EAD3;
   text-align: center;
 }
