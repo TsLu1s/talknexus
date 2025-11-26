@@ -1,7 +1,7 @@
 import React from "react";
 import "../App.css";
 import "./Environment.css"; 
-import imagePlaceholder from "../images/image placeholder.png";
+import EnvImage from "../images/EnvImage.jpg"
 
 
 
@@ -33,7 +33,7 @@ function TextBlock2(){
             <p style={{ textAlign: "left" }}> Overall, AI usage and its rapid expansion are having significant effects on our environment. It has been seen that these issues are primarily affecting communities that are already at high risks, social, economically, and environmentally. Drawing attention to this issues and understanding the role we play is crucial to making change in this field.  </p>
             </div> 
             <div className="column">
-            <img src={imagePlaceholder} alt="Environmental Impact" />
+            <img src={EnvImage} alt="Environmental Impact" />
             </div>
         </div>
     );
