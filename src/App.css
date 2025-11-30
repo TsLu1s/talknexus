@@ -63,6 +63,11 @@
   font-family: 'Playfair Display', serif;
 }
 
+p {
+  font-family:Georgia, 'Times New Roman', Times, serif;
+  font-size: large;
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
