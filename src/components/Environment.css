@@ -37,9 +37,11 @@ h2 {
 }
 
 .ENVcolumn img {
-  max-width: 100%;
+  width: 95%;
   height: auto;
   display: block;
+  margin-bottom: 20px;
+  padding-left: 20px;
 }
 
 

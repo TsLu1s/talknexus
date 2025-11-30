@@ -1,7 +1,9 @@
 import React from "react";
 import "../App.css";
 import "./Environment.css"; 
-import EnvImpact from "../images/EnvImpact.jpeg";
+import AIWater from "../images/AIWater.jpeg";
+import AIPower from "../images/AIPower.jpeg";
+//import EnvImpact from "../images/EnvImpact.jpeg";
 
 
 
@@ -33,7 +35,8 @@ function TextBlock2(){
             <p style={{ textAlign: "left" }}> Overall, AI usage and its rapid expansion are having significant effects on our environment. It has been seen that these issues are primarily affecting communities that are already at high risks, social, economically, and environmentally. Drawing attention to this issues and understanding the role we play is crucial to making change in this field.  </p>
             </div>
             <div className="ENVcolumn">
-            <img src={EnvImpact} alt="Environmental Impact" />
+            <img src={AIWater} alt="Water Impact" />
+            <img src={AIPower} alt="Power Impact" />
             </div>
         </div>
     );
