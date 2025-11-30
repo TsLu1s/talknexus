@@ -8,7 +8,6 @@ function Home() {
         <>
             <div className="homepage font-link">
                 <h2>Safe-AI Initiative</h2>
-                <p>AI might not be the best thing ever!</p>
                 <TextBlock1 />
             </div>
 

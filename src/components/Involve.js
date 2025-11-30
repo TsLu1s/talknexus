@@ -6,7 +6,6 @@ function Involve() {
     return(
         <div className="involvepage font-link">
             <h2>Safe-AI: Get involved</h2>
-            <p>AI might not be the best thing ever!</p>
             <TextBlock4 />
         </div>
 

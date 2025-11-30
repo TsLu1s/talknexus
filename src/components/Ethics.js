@@ -9,7 +9,6 @@ function Ethics() {
     return(
         <div className="ethicspage font-link">
             <h2>Safe-AI: Ethical concerns</h2>
-            <p>AI might not be the best thing ever!</p>
             <TextBlock3 />
         </div>
     );

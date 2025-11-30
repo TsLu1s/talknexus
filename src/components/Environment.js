@@ -11,7 +11,6 @@ function Environment() {
     return(
         <div className="environmentpage font-link">
             <h2>Safe-AI: Environmental concerns</h2>
-            <p>AI might not be the best thing ever!</p>
             <TextBlock2 />
         </div>
     );
