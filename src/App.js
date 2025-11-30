@@ -7,6 +7,8 @@ import Ethics from "./components/Ethics";
 import Involve from "./components/Involve";
 import Mental from "./components/Mental";
 import Sources from "./components/Sources";
+import Sources from "./components/Sources";
+
 
 function App() {
   const [page, setPage] = useState("Home");

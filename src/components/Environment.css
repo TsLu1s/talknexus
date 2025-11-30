@@ -20,26 +20,28 @@ h2 {
     margin-bottom: 0px;
 }
 
-.row {
+.ENVrow {
   width: 100%;
   margin-top: 20px;
 }
 
-.column {
+.ENVcolumn {
   float: left;
   width: 50%; 
 }
 
-.row:after {
+.ENVrow:after {
   content: "";
   display: table;
   clear: both;
 }
 
-.column img {
-  max-width: 100%;
+.ENVcolumn img {
+  width: 95%;
   height: auto;
   display: block;
+  margin-bottom: 20px;
+  padding-left: 20px;
 }
 
 

@@ -1,7 +1,9 @@
 import React from "react";
 import "../App.css";
 import "./Environment.css"; 
-import EnvImage from "../images/EnvImage.jpg"
+import AIWater from "../images/AIWater.jpeg";
+import AIPower from "../images/AIPower.jpeg";
+//import EnvImpact from "../images/EnvImpact.jpeg";
 
 
 
@@ -16,8 +18,8 @@ function Environment() {
 }
 function TextBlock2(){
     return ( 
-        <div className="row"> 
-            <div className="column">
+        <div className="ENVrow"> 
+            <div className="ENVcolumn">
             <h3 style={{ textAlign: "left" }}> Overview </h3>
             <p style={{ textAlign: "left" }}> Most have heard that AI has negative impacts on the environment, but is there an understanding of how signifcant it is? </p>
             <h4 style={{ textAlign: "left" }}> Energy</h4>
@@ -31,13 +33,16 @@ function TextBlock2(){
                 <br />Scope 3: Supply chain​ Water evaporated or otherwise consumed across chip manufacturing and other primary AI computing supply chain elements​ </p>
             <h4 style={{ textAlign: "left" }}> Summary</h4>
             <p style={{ textAlign: "left" }}> Overall, AI usage and its rapid expansion are having significant effects on our environment. It has been seen that these issues are primarily affecting communities that are already at high risks, social, economically, and environmentally. Drawing attention to this issues and understanding the role we play is crucial to making change in this field.  </p>
-            </div> 
-            <div className="column">
-            <img src={EnvImage} alt="Environmental Impact" />
+            </div>
+            <div className="ENVcolumn">
+            <img src={AIWater} alt="Water Impact" />
+            <img src={AIPower} alt="Power Impact" />
             </div>
         </div>
     );
 }
+
+
 
 export default Environment;
 export { TextBlock2 };
