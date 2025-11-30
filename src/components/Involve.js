@@ -22,12 +22,13 @@ function TextBlock4(){
             <p style={{ textAlign: "left" }}> We aren't the only site pushing for this education, here are some resources that we used as inspiration and will provide you with more info!</p>
             <p style={{ textAlign: "left" }}> <a href="https://www.realgoodai.org/">https://www.realgoodai.org/</a> </p>
             <p style={{ textAlign: "left" }}> <a href="https://www.stopkillerrobots.org/">https://www.stopkillerrobots.org/</a> </p>
+            <p style={{ textAlign: "left" }}> <a href="https://pauseai.info/">https://pauseai.info/</a> </p>
             <h4 style={{ textAlign: "left" }}> Alternate Resources</h4>
             <p style={{ textAlign: "left" }}> If you feel like you are turning to AI for help on tasks like organizing, brainstorming, problem solving, studying, or anything else. There are a plethora of platforms that can provide you with resources that are much less harmful than generative AI.</p>
             <p style={{ textAlign: "left" }}> <a href="https://www.tgwstudio.com/five-alternatives-to-ai-and-chatgpt/">https://www.tgwstudio.com/five-alternatives-to-ai-and-chatgpt/</a> </p>
             <h4 style={{ textAlign: "left" }}> Local Involvement</h4>
             <p style={{ textAlign: "left" }}> No matter where you are there are ways that you can get involved in the push for safe ai. Listed below are some ways you can get involved locally! </p>
-            <p style={{ textAlign: "left" }}> ** insert local movements </p>
+            <p style={{ textAlign: "left" }}> <a href="https://www.pecva.org/work/energy-work/data-centers/virginia-data-center-reform-coalition/">Virginia Data Center Reform Coalition</a> </p>
             <p style={{ textAlign: "left" }}> ** insert local petitions</p>
             <p style={{ textAlign: "left" }}> ** insert local organizations </p>
 
