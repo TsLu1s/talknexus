@@ -20,23 +20,23 @@ h2 {
     margin-bottom: 0px;
 }
 
-.row {
+.ENVrow {
   width: 100%;
   margin-top: 20px;
 }
 
-.column {
+.ENVcolumn {
   float: left;
   width: 50%; 
 }
 
-.row:after {
+.ENVrow:after {
   content: "";
   display: table;
   clear: both;
 }
 
-.column img {
+.ENVcolumn img {
   max-width: 100%;
   height: auto;
   display: block;

@@ -16,8 +16,8 @@ function Ethics() {
 
 function TextBlock3(){
     return ( 
-        <div className="row"> 
-            <div className="column">
+        <div className="Ethicsrow"> 
+            <div className="Ethicscolumn">
             <h3 style={{ textAlign: "left" }}> Overview </h3>
             <p style={{ textAlign: "left" }}> Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos. Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class </p>
             <h4 style={{ textAlign: "left" }}> Misinformation</h4>
@@ -25,7 +25,7 @@ function TextBlock3(){
             <h4 style={{ textAlign: "left" }}> Stealing Work</h4>
             <p style={{ textAlign: "left" }}> aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos. bus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class </p>
         </div>
-        <div className= "column">
+        <div className= "Ethicscolumn">
             <img src={AIEthics} alt="Ethical Impact" />
         </div>
     </div>
