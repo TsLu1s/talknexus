@@ -1,8 +1,8 @@
 .mentalpage {
   flex: 1;
   display: flex; 
-  flex-direction: column;   
+  width: auto;  
   padding: 20px;
-  align-items: center;
-  text-align: center;
+  align-items: left;
+  text-align: left;
 }

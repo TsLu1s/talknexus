@@ -7,7 +7,6 @@ import Ethics from "./components/Ethics";
 import Involve from "./components/Involve";
 import Mental from "./components/Mental";
 
-
 function App() {
   const [page, setPage] = useState("Home");
   const renderPage = () => {

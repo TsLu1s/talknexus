@@ -1,7 +1,7 @@
-.App {
-  text-align: center;
+/* .App {
+  text-align: center; 
   background-color: #F2EAD3;
-}
+} */
 
 .App-logo {
   height: 40vmin;
@@ -52,9 +52,10 @@
 }
 
 .App {
-  display: flex;
-  align-items: stretch;
+  display:flex;
+  align-items:left;
   min-height: 100vh;
+  max-width: fit-content;
   background-color: #F2EAD3;
   text-align: center;
 }
@@ -70,4 +71,7 @@
   to {
     transform: rotate(360deg);
   }
+}
+.body {
+  background-color: #F2EAD3;
 }
