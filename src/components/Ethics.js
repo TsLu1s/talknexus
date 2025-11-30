@@ -2,6 +2,7 @@ import React from "react";
 import "../App.css";
 import "./Ethics.css";
 import AIEthics from "../images/AIEthics.png";
+import humanEffects from "../images/humanEffects.png";
 
 
 function Ethics() {
@@ -27,6 +28,8 @@ function TextBlock3(){
         </div>
         <div className= "Ethicscolumn">
             <img src={AIEthics} alt="Ethical Impact" />
+            <p>Generative AI risks and Challenges that could result in human effects </p>
+            <img src={humanEffects} alt="Human Effects" />
         </div>
     </div>
     )
