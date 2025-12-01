@@ -28,8 +28,6 @@ function TextBlock4(){
             <h4 style={{ textAlign: "left" }}> Local Involvement</h4>
             <p style={{ textAlign: "left" }}> No matter where you are there are ways that you can get involved in the push for safe ai. Listed below are some ways you can get involved locally! </p>
             <p style={{ textAlign: "left" }}> <a href="https://www.pecva.org/work/energy-work/data-centers/virginia-data-center-reform-coalition/">Virginia Data Center Reform Coalition</a> </p>
-            <p style={{ textAlign: "left" }}> ** insert local petitions</p>
-            <p style={{ textAlign: "left" }}> ** insert local organizations </p>
 
         </div>
     )
