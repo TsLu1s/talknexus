@@ -31,6 +31,7 @@ function TextBlock2(){
             <p style={{ textAlign: "left" }}>[13] P. Li et al., "Making AI Less 'Thirsty': Addressing the Secret Water Footprint of AI Models," *arXiv:2304.03271*, 2023. [Online]. Available: <a href="https://arxiv.org/pdf/2304.03271" target = "_blank">https://arxiv.org/pdf/2304.03271</a>. ​</p>
             <p style={{ textAlign: "left" }}>[14] R. Dhanani, “Environmental Impact of Generative AI | 20 Stats & Facts 2024,” The Sustainable Agency, Sep. 27, 2024. <a href="https://thesustainableagency.com/blog/environmental-impact-of-generative-ai/" target = "_blank">https://thesustainableagency.com/blog/environmental-impact-of-generative-ai/</a></p>
             <p style={{ textAlign: "left" }}>[15] United States Government Accountability Office, “United States Government Accountability Office Report to Congressional Requesters Artificial Intelligence Generative AI’s Environmental and Human Effects,” Apr. 2025. Available: <a href="https://www.gao.gov/assets/gao-25-107172.pdf" target = "_blank">https://www.gao.gov/assets/gao-25-107172.pdf</a></p>
+            <p style={{ textAlign: "left" }}>[16] P. Axbom, “The Elements of AI Ethics,” Axbom, Jun. 02, 2023. Available: <a href="https://axbom.com/aielements/" target = "_blank">https://axbom.com/aielements/</a></p>
         </div>
         </div>
     );
