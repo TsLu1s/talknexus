@@ -2,6 +2,9 @@ import React from "react";
 import App from "../App";
 import "../App.css";
 import "./Home.css";
+import AIUse from "../images/AI_Usage.png"
+import AIAware from "../images/AI_Awareness_chart.png"
+import Prior from "../images/Prior_Knowledge.png"
 
 function Home() {
     return(
@@ -29,6 +32,24 @@ function TextBlock1(){
             <p style={{ textAlign: "left" }}> AI is a blanket term that encompasses a variety of technologies that enable computers (machines) to mimic human intelligence and decision making. </p>
             <p style={{ textAlign: "left" }}> Here, our focus is on AI that is most commonly used. Think. chatbots like chatgpt, customer service bots, and other ML technologies of the sort </p>
             <p style={{ textAlign: "left" }}> Now that there is a general understanding of what AI is and our focus, feel free to dig into the rest of the site! </p>
+            <div className="HomePictures">
+                <p>To further emphasize the motivations for this project, we have conducted a survey among college students to guage perceptions of the AI industry. 
+                    We recieved 41 responses for this survey from students with a variety of academic backgrounds.
+                </p>
+                <img className = "homeImage1" src = {AIUse} alt="AI usage among college students" />
+                <p>The graph above displays the reported amount of AI usage among respondents with a majority of 63.4% reporting at least moderate use.</p>
+                <img className = "homeImage2" src = {Prior} alt="Ratings of prior knowledge of AI systems" />
+                <p>The graph above depicts responses on a 1 to 5 scale of understanding of AI models and their operations. 
+                    We see an almost ideal curve in this data, indicating an adequate sample to represent college students in general. 
+                </p>
+                <img className = "homeImage3" src = {AIAware} alt ="Comparison of issue awareness and issue concern"/>
+                <p>Respondents were asked to rate their awareness of the AI industry's impacts on 5 highlighted issues and then asked to rate their personal concern for said issues on the same 1 to 5 scale. 
+                    The table above contains the average rating of awareness and concern for each category. 
+                </p>
+                <p>The average rating of awareness for all but one of the highlighted issues was lower than the average rating of conern. 
+                    This emphasizes the importance of our mission as frequent users of AI tools are not aware of the effects increased AI usage is already having. 
+                </p>
+            </div>
         </div>
     )
 }
