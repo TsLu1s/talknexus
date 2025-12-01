@@ -29,12 +29,12 @@ function TextBlock2(){
             <p style={{ textAlign: "left" }}>[11] Stop Killer Robots, Available: <a href = "https://www.stopkillerrobots.org/." target = "_blank">https://www.stopkillerrobots.org/.</a> </p>
             <p style={{ textAlign: "left" }}>[12] Singh, S. (2025, August 16). CHATGPT statistics (2025) - daily & monthly active users. DemandSage. <a href = "https://www.demandsage.com/chatgpt-statistics/" target = "_blank">https://www.demandsage.com/chatgpt-statistics/</a>  </p>
             <p style={{ textAlign: "left" }}>[13] P. Li et al., "Making AI Less 'Thirsty': Addressing the Secret Water Footprint of AI Models," *arXiv:2304.03271*, 2023. [Online]. Available: <a href="https://arxiv.org/pdf/2304.03271" target = "_blank">https://arxiv.org/pdf/2304.03271</a>. ​</p>
-            </div> 
-            <div className="column">
-            </div>
+            <p style={{ textAlign: "left" }}>[14] R. Dhanani, “Environmental Impact of Generative AI | 20 Stats & Facts 2024,” The Sustainable Agency, Sep. 27, 2024. <a href="https://thesustainableagency.com/blog/environmental-impact-of-generative-ai/" target = "_blank">https://thesustainableagency.com/blog/environmental-impact-of-generative-ai/</a></p>
+            <p style={{ textAlign: "left" }}>[15] United States Government Accountability Office, “United States Government Accountability Office Report to Congressional Requesters Artificial Intelligence Generative AI’s Environmental and Human Effects,” Apr. 2025. Available: <a href="https://www.gao.gov/assets/gao-25-107172.pdf" target = "_blank">https://www.gao.gov/assets/gao-25-107172.pdf</a></p>
+        </div>
         </div>
     );
 }
 
 export default Sources;
-export { TextBlock2 };
+export { TextBlock2 }; 
