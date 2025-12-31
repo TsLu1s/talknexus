@@ -1,6 +1,6 @@
 streamlit>=1.39.0
 pandas>=1.2.0
-langchain==0.3.10
+langchain==0.3.27
 langchain-community==0.3.27
 sentence-transformers==3.3.1
 faiss-cpu==1.9.0
