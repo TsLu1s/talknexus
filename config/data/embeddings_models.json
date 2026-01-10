@@ -1,0 +1,32 @@
+{
+  "bge-small": {
+    "name": "BAAI/bge-small-en-v1.5",
+    "type": "huggingface",
+    "description": "Optimized for retrieval tasks, good balance of speed/quality"
+  },
+  "bge-large": {
+    "name": "BAAI/bge-large-en-v1.5",
+    "type": "huggingface",
+    "description": "Highest quality, but slower and more resource intensive"
+  },
+  "minilm": {
+    "name": "sentence-transformers/all-MiniLM-L6-v2",
+    "type": "huggingface",
+    "description": "Lightweight, fast, good general purpose model"
+  },
+  "mpnet": {
+    "name": "sentence-transformers/all-mpnet-base-v2",
+    "type": "huggingface",
+    "description": "Higher quality, slower than MiniLM"
+  },
+  "e5-small": {
+    "name": "intfloat/e5-small-v2",
+    "type": "huggingface",
+    "description": "Efficient model optimized for semantic search"
+  },
+  "snowflake-arctic-embed2:568m": {
+    "name": "snowflake-arctic-embed2:568m",
+    "type": "ollama",
+    "description": "Multilingual frontier model with strong performance [Ollama Embedding Model, Download it first]"
+  }
+}

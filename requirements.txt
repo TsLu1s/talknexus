@@ -4,4 +4,4 @@ langchain==0.3.27
 langchain-community==0.3.27
 sentence-transformers==3.3.1
 faiss-cpu==1.9.0
-pypdf==6.4.0
+pypdf==6.6.0

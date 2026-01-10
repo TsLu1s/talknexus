@@ -45,11 +45,11 @@ cd talknexus
 
 2. **Set Up Conda Environment**
 
-First, ensure you have Conda installed. Then create and activate a new environment with Python 3.10:
+First, ensure you have Conda installed. Then create and activate a new environment with Python 3.11:
 
 ```bash
 # Create new environment
-conda create -n talknexus_env python=3.10
+conda create -n talknexus_env python=3.11
 
 # Activate the environment
 conda activate talknexus_env

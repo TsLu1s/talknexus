@@ -1,0 +1,78 @@
+"""
+TalkNexus Configuration Package
+"""
+
+from config.settings import (
+    BASE_DIR,
+    CONFIG_DIR,
+    DATA_DIR,
+    CONVERSATIONS_DIR,
+    EXPERIMENTS_DIR,
+    OLLAMA_MODELS_FILE,
+    EMBEDDING_MODELS_FILE,
+    STYLES_FILE,
+    OLLAMA_BASE_URL,
+    OLLAMA_API_TAGS,
+    DEFAULT_TEMPERATURE,
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_TOP_K,
+    PARENT_CHUNK_MULTIPLIER,
+    CHUNK_OVERLAP_RATIO,
+    APP_TITLE,
+    APP_ICON,
+    APP_LAYOUT,
+    CONVERSATION_TITLE_MAX_LENGTH,
+    NEW_CONVERSATION_ID,
+    NEW_CONVERSATION_TITLE,
+    MODEL_FILTER_KEYWORDS,
+)
+
+from config.constants import (
+    PageName,
+    PageIcon,
+    PageBadge,
+    MessageRole,
+    EmbeddingModelType,
+    ExperimentStatus,
+    ConversationAction,
+    TEXT_SEPARATORS,
+    HARDWARE_REQUIREMENTS,
+    PAGE_CONFIG,
+)
+
+__all__ = [
+    # Settings
+    "BASE_DIR",
+    "CONFIG_DIR",
+    "DATA_DIR",
+    "CONVERSATIONS_DIR",
+    "EXPERIMENTS_DIR",
+    "OLLAMA_MODELS_FILE",
+    "EMBEDDING_MODELS_FILE",
+    "STYLES_FILE",
+    "OLLAMA_BASE_URL",
+    "OLLAMA_API_TAGS",
+    "DEFAULT_TEMPERATURE",
+    "DEFAULT_CHUNK_SIZE",
+    "DEFAULT_TOP_K",
+    "PARENT_CHUNK_MULTIPLIER",
+    "CHUNK_OVERLAP_RATIO",
+    "APP_TITLE",
+    "APP_ICON",
+    "APP_LAYOUT",
+    "CONVERSATION_TITLE_MAX_LENGTH",
+    "NEW_CONVERSATION_ID",
+    "NEW_CONVERSATION_TITLE",
+    "MODEL_FILTER_KEYWORDS",
+    # Constants
+    "PageName",
+    "PageIcon",
+    "PageBadge",
+    "MessageRole",
+    "EmbeddingModelType",
+    "ExperimentStatus",
+    "ConversationAction",
+    "TEXT_SEPARATORS",
+    "HARDWARE_REQUIREMENTS",
+    "PAGE_CONFIG",
+]

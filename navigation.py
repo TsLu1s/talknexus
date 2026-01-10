@@ -2,72 +2,119 @@ import warnings
 warnings.filterwarnings("ignore", category=Warning)
 
 import streamlit as st
-import st_pages # required modules
 
-# Set page config
-st.set_page_config(page_title="TalkNexus - Ollama Chatbot Multi-Model Interface", layout="wide", page_icon="🤖")
+from config import APP_TITLE, APP_ICON, APP_LAYOUT, STYLES_FILE
+from config.constants import PageName, PAGE_CONFIG
+from ui.pages import home, model_management, ai_chatbot, rag_chat
 
-# Load custom CSS from file
-def load_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-load_css('styles.css')
+# =============================================================================
+# Page Configuration
+# =============================================================================
 
-# Initialize session state
-if 'current_page' not in st.session_state:
-    st.session_state.current_page = "Home"
+st.set_page_config(
+    page_title=APP_TITLE,
+    layout=APP_LAYOUT,
+    page_icon=APP_ICON,
+)
 
+
+# =============================================================================
+# CSS Loading
+# =============================================================================
+
+def load_css() -> None:
+    """Load custom CSS styles."""
+    try:
+        with open(STYLES_FILE) as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except FileNotFoundError:
+        pass  # Gracefully handle missing CSS
+
+
+load_css()
+
+
+# =============================================================================
+# Session State Initialization
+# =============================================================================
+
+if "current_page" not in st.session_state:
+    st.session_state.current_page = PageName.HOME.value
+
+
+# =============================================================================
 # Header
-st.markdown(f"""
+# =============================================================================
+
+st.markdown(
+    """
 <div class="header">
     <div class="animated-bg"></div>
     <div class="header-content">
-        <h1 class="header-title">Ollama Chatbot Multi-Model Interface</h1> 
+        <h1 class="header-title">Ollama Chatbot Multi-Model Interface</h1>
         <p class="header-subtitle">Advanced Language Models & Intelligent Conversations</p>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
-# Enhanced pages definition
+
+# =============================================================================
+# Page Registry
+# =============================================================================
+
 PAGES = {
-    "Home": {
-        "icon": "house-door",
-        "func": st_pages.home,
-        "description": "Guidelines & Overview",
-        "badge": "Informative",
-        "color": "var(--primary-color)"
+    PageName.HOME.value: {
+        "icon": PAGE_CONFIG[PageName.HOME]["icon"].value,
+        "func": home.run,
+        "description": PAGE_CONFIG[PageName.HOME]["description"],
+        "badge": PAGE_CONFIG[PageName.HOME]["badge"].value,
     },
-    "Language Models Management": {
-        "icon": "gear",
-        "func": st_pages.model_management,
-        "description": "Download Models",
-        "badge": "Configurations",
-        "color": "var(--secondary-color)"
+    PageName.MODEL_MANAGEMENT.value: {
+        "icon": PAGE_CONFIG[PageName.MODEL_MANAGEMENT]["icon"].value,
+        "func": model_management.run,
+        "description": PAGE_CONFIG[PageName.MODEL_MANAGEMENT]["description"],
+        "badge": PAGE_CONFIG[PageName.MODEL_MANAGEMENT]["badge"].value,
     },
-    "AI Conversation": {
-        "icon": "chat-dots",
-        "func": st_pages.ai_chatbot,
-        "description": "Interactive AI Chat",
-        "badge": "Application",
-        "color": "var(--highlight-color)"
+    PageName.AI_CONVERSATION.value: {
+        "icon": PAGE_CONFIG[PageName.AI_CONVERSATION]["icon"].value,
+        "func": ai_chatbot.run,
+        "description": PAGE_CONFIG[PageName.AI_CONVERSATION]["description"],
+        "badge": PAGE_CONFIG[PageName.AI_CONVERSATION]["badge"].value,
     },
-    "RAG Conversation": {
-        "icon": "chat-dots",
-        "func": st_pages.rag_chat,
-        "description": "PDF AI Chat Assistant",
-        "badge": "Application",
-        "color": "var(--highlight-color)"
-    }
+    PageName.RAG_CONVERSATION.value: {
+        "icon": PAGE_CONFIG[PageName.RAG_CONVERSATION]["icon"].value,
+        "func": rag_chat.run,
+        "description": PAGE_CONFIG[PageName.RAG_CONVERSATION]["description"],
+        "badge": PAGE_CONFIG[PageName.RAG_CONVERSATION]["badge"].value,
+    },
 }
 
-st.markdown("""
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-""", unsafe_allow_html=True)
 
-def navigate():
+# =============================================================================
+# Bootstrap Icons
+# =============================================================================
+
+st.markdown(
+    """
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+""",
+    unsafe_allow_html=True,
+)
+
+
+# =============================================================================
+# Navigation
+# =============================================================================
+
+def navigate() -> str:
+    """Render navigation sidebar and return selected page."""
     with st.sidebar:
-        st.markdown('''
+        # Header with GitHub link
+        st.markdown(
+            """
         <a href="https://github.com/TsLu1s/talknexus" target="_blank" style="text-decoration: none; color: inherit; display: block;">
             <div class="header-container" style="cursor: pointer;">
                 <div class="profile-section">
@@ -78,26 +125,29 @@ def navigate():
                 </div>
             </div>
         </a>
-        ''', unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
-        st.markdown('---')
+        st.markdown("---")
 
-        # Create menu items
+        # Navigation menu items
         for page, info in PAGES.items():
             selected = st.session_state.current_page == page
-            
-            # Create the button (invisible but clickable)
+
+            # Clickable button
             if st.button(
                 f"{page}",
                 key=f"nav_{page}",
                 use_container_width=True,
-                type="secondary" if selected else "primary"
+                type="secondary" if selected else "primary",
             ):
                 st.session_state.current_page = page
                 st.rerun()
 
             # Visual menu item
-            st.markdown(f"""
+            st.markdown(
+                f"""
                 <div class="menu-item {'selected' if selected else ''}">
                     <div class="menu-icon">
                         <i class="bi bi-{info['icon']}"></i>
@@ -108,35 +158,48 @@ def navigate():
                     </div>
                     <div class="menu-badge">{info['badge']}</div>
                 </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
-        # Close navigation container
-        st.markdown('</div>', unsafe_allow_html=True)
-        
+        st.markdown("</div>", unsafe_allow_html=True)
+
         return st.session_state.current_page
 
-# Get selected page and run its function
+
+# =============================================================================
+# Main Application
+# =============================================================================
+
 try:
     selected_page = navigate()
-    # Update session state
+
     if selected_page != st.session_state.current_page:
         st.session_state.current_page = selected_page
         st.rerun()
-    
-    # Run the selected function
+
+    # Run selected page
     page_function = PAGES[selected_page]["func"]
     page_function()
+
 except Exception as e:
     st.error(f"Error loading page: {str(e)}")
-    st_pages.home.run()
+    home.run()
 
-# Display the footer
-st.markdown("""
+
+# =============================================================================
+# Footer
+# =============================================================================
+
+st.markdown(
+    """
 <div class="footer">
     <div class="footer-content">
-        <p>© 2024 Powered by <a href="https://github.com/TsLu1s" target="_blank">TsLu1s </a>. 
+        <p>© 2024 Powered by <a href="https://github.com/TsLu1s" target="_blank">TsLu1s </a>.
         Advanced Language Models & Intelligent Conversations
         | Project Source: <a href="https://github.com/TsLu1s/talknexus" target="_blank"> TalkNexus</p>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
