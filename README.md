@@ -88,7 +88,10 @@ poetry env use python3.11
 ```
 
 ### 5. Install Dependencies
+
 ```bash
+poetry install
+
 poetry install
 ```
 
