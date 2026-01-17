@@ -10,17 +10,14 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
-numpy = "1.26.4"
-pandas = "^2.0.0"
-streamlit = "^1.39.0"
+streamlit = ">=1.39.0"
+pandas = ">=1.2.0"
 langchain = "0.3.27"
 langchain-community = "0.3.27"
 sentence-transformers = "3.3.1"
 faiss-cpu = "1.9.0"
 pypdf = "6.6.0"
-torch = "^2.0.0"
-requests = "^2.28.0"
-pydantic = "^2.0.0"
+pydantic = ">=2.0.0"
 
 [build-system]
 requires = ["poetry-core"]
