@@ -104,13 +104,13 @@ Visit Ollama and follow the installation instructions for your operating system.
 
 ### 7. Start the Application
 ```bash
-poetry run streamlit run app.py
+poetry run streamlit run navigation.py
 ```
 
 Or activate the Poetry shell first:
 ```bash
 poetry shell
-streamlit run app.py
+streamlit run navigation.py
 ```
 
 ## 💻 Usage & Architecture
