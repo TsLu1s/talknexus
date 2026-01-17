@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "talknexus"
+version = "1.1.0"
+description = "Ollama Chatbot Multi-Model & RAG Interface"
+authors = ["Luís Fernando da Silva Santos"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/TsLu1s/talknexus"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+streamlit = "^1.39.0"
+pandas = "^1.2.0"
+langchain = "0.3.27"
+langchain-community = "0.3.27"
+sentence-transformers = "3.3.1"
+faiss-cpu = "1.9.0"
+pypdf = "6.6.0"
+torch = "^2.0.0"
+requests = "^2.28.0"
+pydantic = "^2.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

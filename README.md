@@ -6,7 +6,7 @@ A comprehensive and scalable Chatbot Application that integrates multiple langua
 
 - **Multi-Model Support**: Seamlessly interact with various state-of-the-art Ollama language models including DeepSeek, Llama, Mistral, and 125+ more.
 - **Model Management Interface**: Easy-to-use interface for downloading, managing, and switching between different language models.
-- **Real-time Chat Interface**:  Clean interface with model-specific chat history and streamed responses.
+- **Real-time Chat Interface**: Clean interface with model-specific chat history and streamed responses.
 - **Conversation History Management**: Save, load, and manage chat conversations with automatic titling and organized storage for easy access to previous interactions.
 - **RAG-Powered Document Analysis**: Advanced document processing system supporting PDF analysis with multiple embedding models for context-aware document querying and intelligent responses.
 - **Experiment Management**: Save, load, and track different document analysis configurations with customizable retrieval settings for reproducible results.
@@ -28,42 +28,73 @@ https://github.com/user-attachments/assets/46b20f63-505e-424c-a93a-df60ded20051
 
 ## 📋 Prerequisites
 
-- Python 3.10 or higher
+- Python 3.11 or higher
 - Ollama API (latest version)
-- Streamlit
+- Poetry (Python package manager)
 - 8GB+ RAM (varies based on model size)
 
 **Important Note:** Demo Version is not able to run Ollama API, run the app locally for full feature usability.
 
 ## ⚙️ Installation
 
-1. **Clone the Repository**
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/TsLu1s/talknexus.git
 cd talknexus
 ```
 
-2. **Set Up Conda Environment**
+### 2. Install Python 3.11
 
-First, ensure you have Conda installed. Then create and activate a new environment with Python 3.11:
-
+**macOS (using pyenv):**
 ```bash
-# Create new environment
-conda create -n talknexus_env python=3.11
+# Install pyenv if not already installed
+brew install pyenv
 
-# Activate the environment
-conda activate talknexus_env
+# Install Python 3.11
+pyenv install 3.11
+
+# Set Python 3.11 for this project
+pyenv local 3.11
 ```
 
-3. **Install Dependencies**
+**Ubuntu/Debian:**
 ```bash
-pip install -r requirements.txt
+sudo apt update
+sudo apt install python3.11 python3.11-venv
 ```
 
-4. **Install Ollama**
-   
-Visit Ollama API and follow the installation instructions for your operating system.
+**Windows:**
 
+Download and install Python 3.11 from [python.org](https://www.python.org/downloads/)
+
+### 3. Install Poetry
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+Verify installation:
+```bash
+poetry --version
+```
+
+> **Note:** You may need to add Poetry to your PATH. Follow the instructions shown after installation or add this to your shell config:
+> ```bash
+> export PATH="$HOME/.local/bin:$PATH"
+> ```
+
+### 4. Configure Poetry to Use Python 3.11
+```bash
+poetry env use python3.11
+```
+
+### 5. Install Dependencies
+```bash
+poetry install
+```
+
+### 6. Install Ollama
+
+Visit Ollama and follow the installation instructions for your operating system.
 
 <div align="left">
    
@@ -71,9 +102,15 @@ Visit Ollama API and follow the installation instructions for your operating sys
 
 </div>
 
-5. **Start the Application**
+### 7. Start the Application
 ```bash
-streamlit run navigation.py
+poetry run streamlit run app.py
+```
+
+Or activate the Poetry shell first:
+```bash
+poetry shell
+streamlit run app.py
 ```
 
 ## 💻 Usage & Architecture
@@ -111,7 +148,7 @@ streamlit run navigation.py
 5. Ask questions about your documents
 6. Receive context-aware responses based on document content
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
