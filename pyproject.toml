@@ -6,6 +6,7 @@ authors = ["Luís Fernando da Silva Santos"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/TsLu1s/talknexus"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
