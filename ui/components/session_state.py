@@ -34,10 +34,6 @@ def init_session_state() -> None:
     if "conversation_title" not in st.session_state:
         st.session_state.conversation_title = NEW_CONVERSATION_TITLE
 
-    # Rerun flag for conversation operations
-    if "needs_rerun" not in st.session_state:
-        st.session_state.needs_rerun = False
-
 
 def init_rag_session_state() -> None:
     """
@@ -51,18 +47,10 @@ def init_rag_session_state() -> None:
     if "rag_system" not in st.session_state:
         st.session_state.rag_system = RAGEngine()
 
-    # Chat and processing states
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
-    if "show_chat" not in st.session_state:
-        st.session_state.show_chat = False
-
-    if "process_ready" not in st.session_state:
-        st.session_state.process_ready = False
-
-    if "processing_completed" not in st.session_state:
-        st.session_state.processing_completed = False
+    # RAG chat history: kept apart from the AI chat's "messages",
+    # so one page never wipes or saves the other page's chat.
+    if "rag_messages" not in st.session_state:
+        st.session_state.rag_messages = []
 
     # Experiment tracking states
     if "target_experiment" not in st.session_state:
@@ -70,6 +58,13 @@ def init_rag_session_state() -> None:
 
     if "previous_experiment" not in st.session_state:
         st.session_state.previous_experiment = ExperimentStatus.NEW.value
+
+    # Experiment whose retriever is in memory, so questions don't reload it from disk
+    if "loaded_experiment" not in st.session_state:
+        st.session_state.loaded_experiment = None
+
+    if "loaded_config" not in st.session_state:
+        st.session_state.loaded_config = {}
 
     # Model and parameter tracking states
     if "previous_model" not in st.session_state:
@@ -86,19 +81,3 @@ def init_rag_session_state() -> None:
 
     if "previous_top_k" not in st.session_state:
         st.session_state.previous_top_k = None
-
-
-def reset_conversation_state() -> None:
-    """Reset conversation-related session state."""
-    st.session_state.messages = []
-    st.session_state.conversation = None
-    st.session_state.current_conversation_id = NEW_CONVERSATION_ID
-    st.session_state.conversation_title = NEW_CONVERSATION_TITLE
-
-
-def reset_rag_state() -> None:
-    """Reset RAG-related session state."""
-    st.session_state.messages = []
-    st.session_state.show_chat = False
-    st.session_state.process_ready = False
-    st.session_state.processing_completed = False

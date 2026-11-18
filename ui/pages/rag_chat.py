@@ -3,7 +3,8 @@ import streamlit as st
 from config import DEFAULT_CHUNK_SIZE, DEFAULT_TOP_K
 from config.constants import ExperimentStatus, MessageRole
 from core.ollama_client import get_ollama_models
-from core.rag_engine import RAGEngine, EmbeddingModels, get_rag_configurations
+from core.persistence.experiment_store import EXPERIMENT_NAME_MAX_LENGTH, is_valid_experiment_name
+from core.rag_engine import EmbeddingModels, get_rag_configurations
 from utils.stream_handler import StreamHandler
 from ui.components.session_state import init_rag_session_state
 from ui.components.chat import display_chat_history
@@ -72,7 +73,7 @@ def setup_model_selection():
             help="Number of most relevant parent documents to retrieve for each query.",
         )
 
-    # Check for parameter changes
+    # Check for parameter changes: ask to start the analysis again
     if (
         st.session_state.previous_model != llm_model
         or st.session_state.previous_embedding != embedding_model
@@ -80,9 +81,7 @@ def setup_model_selection():
         or st.session_state.previous_chunk_size != chunk_size
         or st.session_state.previous_top_k != top_k
     ):
-        st.session_state.process_ready = False
-        st.session_state.show_chat = False
-        st.session_state.processing_completed = False
+        st.session_state.process_ready_checkbox = False
 
     # Update previous states
     st.session_state.previous_model = llm_model
@@ -107,19 +106,28 @@ def process_documents(
         st.error("Please enter an experiment name")
         return False
 
+    if experiment_name == ExperimentStatus.NEW.value or not is_valid_experiment_name(experiment_name):
+        st.error(
+            "Experiment names may only use letters, numbers, spaces, '-' and '_' "
+            f"(up to {EXPERIMENT_NAME_MAX_LENGTH} characters), and cannot be "
+            f"'{ExperimentStatus.NEW.value}'."
+        )
+        return False
+
     if not uploaded_files:
         st.error("Please upload PDF files first")
         return False
 
     with st.spinner("📚 Processing documents..."):
         try:
+            # Processing replaces the in-memory retriever, even if it fails halfway
+            st.session_state.loaded_experiment = None
             st.session_state.rag_system.process_pdfs(
                 uploaded_files,
                 experiment_name=experiment_name,
                 embedding_model=embedding_model,
                 child_chunk_size=chunk_size,
                 top_k=top_k,
-                llm_model=llm_model,
             )
 
             config = {
@@ -136,11 +144,13 @@ def process_documents(
                 st.error("Failed to save experiment configuration")
                 return False
 
-            st.session_state.show_chat = True
-            st.session_state.messages = []
+            # The retriever just built is already in memory: no need to reload it.
+            st.session_state.loaded_experiment = experiment_name
+            st.session_state.loaded_config = config
+            st.session_state.rag_messages = []
+            # Rerun into the saved experiment; staying on "New Experiment" with
+            # the box checked would process the same files again, forever.
             st.session_state.target_experiment = experiment_name
-            st.session_state.process_ready = True
-            st.session_state.processing_completed = True
 
             st.rerun()
             return True
@@ -154,17 +164,14 @@ def handle_chat_interaction(llm_model: str) -> None:
     """Handle chat interface and interactions."""
     st.markdown("---")
 
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
     # Display chat history
-    display_chat_history()
+    display_chat_history(st.session_state.rag_messages)
 
     # Handle new prompt
     prompt = st.chat_input("Ask about your documents", key="chat_input")
 
     if prompt:
-        st.session_state.messages.append({
+        st.session_state.rag_messages.append({
             "role": MessageRole.USER.value,
             "content": prompt,
         })
@@ -182,9 +189,9 @@ def handle_chat_interaction(llm_model: str) -> None:
                 )
 
                 response = retrieval_chain.invoke({"query": prompt})
-                final_response = response["result"].strip()
+                final_response = stream_handler.clean_response(response["result"])
 
-                st.session_state.messages.append({
+                st.session_state.rag_messages.append({
                     "role": MessageRole.ASSISTANT.value,
                     "content": final_response,
                 })
@@ -194,7 +201,7 @@ def handle_chat_interaction(llm_model: str) -> None:
             except Exception as e:
                 error_msg = f"Error generating response: {str(e)}"
                 st.error(error_msg)
-                st.session_state.messages.append({
+                st.session_state.rag_messages.append({
                     "role": MessageRole.ASSISTANT.value,
                     "content": error_msg,
                 })
@@ -216,28 +223,25 @@ def render_rag_analysis_tab() -> None:
     current_experiments = st.session_state.rag_system.list_experiments()
     experiment_names = [ExperimentStatus.NEW.value] + [name for name, _ in current_experiments]
 
-    # Handle target experiment selection
-    if (
-        "target_experiment" in st.session_state
-        and st.session_state.target_experiment in experiment_names
-    ):
-        initial_index = experiment_names.index(st.session_state.target_experiment)
-    else:
-        initial_index = 0
+    # Select a just-created experiment. Widget state can only be set before the
+    # widget is drawn; its `index` argument is ignored once the widget exists.
+    just_created = st.session_state.target_experiment in experiment_names
+    if just_created:
+        st.session_state.experiment_selector = st.session_state.target_experiment
+    st.session_state.target_experiment = None
 
     selected_experiment = st.selectbox(
         "Select Experiment",
         experiment_names,
-        index=initial_index,
         key="experiment_selector",
     )
 
     # Clear messages if experiment changes
     if selected_experiment != st.session_state.previous_experiment:
-        st.session_state.messages = []
-        st.session_state.show_chat = False
-        st.session_state.process_ready = False
+        st.session_state.rag_messages = []
         st.session_state.previous_experiment = selected_experiment
+        if not just_created:
+            st.session_state.process_ready_checkbox = False
 
     is_new_experiment = selected_experiment == ExperimentStatus.NEW.value
 
@@ -250,53 +254,44 @@ def render_rag_analysis_tab() -> None:
             "📝 Name your Experiment",
             key="experiment_name_input",
             placeholder="Enter experiment name",
-        )
+        ).strip()
     else:
-        experiment_name = selected_experiment
         models = get_ollama_models()
         if not models:
             st.warning("Ollama is not running. Make sure to have Ollama API installed.")
             return
-        llm_model = models[0] if models else None
 
     # Process control
-    process_ready = st.checkbox(
-        "Start RAG Analysis",
-        key="process_ready_checkbox",
-        value=st.session_state.process_ready,
-    )
+    process_ready = st.checkbox("Start RAG Analysis", key="process_ready_checkbox")
 
-    if process_ready:
-        if not is_new_experiment:
-            with st.spinner(f"📚 Processing: {selected_experiment}"):
-                success, config = st.session_state.rag_system.load_experiment(selected_experiment)
-                if success:
-                    st.session_state.show_chat = True
-                    st.session_state.processing_completed = True
-                    if config and "llm_model" in config:
-                        llm_model = config["llm_model"]
-                    handle_chat_interaction(llm_model)
-                else:
-                    st.error(f"Failed to load experiment: {selected_experiment}")
-        else:
-            if not experiment_name:
-                st.error("Please enter an experiment name")
-                return
+    if not process_ready:
+        st.session_state.rag_messages = []
+        return
 
-            success = process_documents(
-                experiment_name,
-                uploaded_files,
-                embedding_model,
-                chunk_size,
-                top_k,
-                llm_model,
-            )
-            if success:
-                st.session_state.show_chat = True
-                handle_chat_interaction(llm_model)
-    else:
-        st.session_state.show_chat = False
-        st.session_state.messages = []
+    if is_new_experiment:
+        # On success this reruns the page into the saved experiment
+        process_documents(
+            experiment_name,
+            uploaded_files,
+            embedding_model,
+            chunk_size,
+            top_k,
+            llm_model,
+        )
+        return
+
+    if st.session_state.loaded_experiment != selected_experiment:
+        with st.spinner(f"📚 Processing: {selected_experiment}"):
+            success, config = st.session_state.rag_system.load_experiment(selected_experiment)
+        if not success:
+            st.error(f"Failed to load experiment: {selected_experiment}")
+            return
+        st.session_state.loaded_experiment = selected_experiment
+        st.session_state.loaded_config = config
+
+    # Answer with the experiment's model, unless it was removed from Ollama since
+    llm_model = st.session_state.loaded_config.get("llm_model")
+    handle_chat_interaction(llm_model if llm_model in models else models[0])
 
 
 def run() -> None:

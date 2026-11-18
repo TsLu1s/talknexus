@@ -32,7 +32,7 @@ EXPERIMENTS_DIR = DATA_DIR / "experiments"
 
 # Config data files
 OLLAMA_MODELS_FILE = CONFIG_DIR / "data" / "ollama_models.json"
-EMBEDDING_MODELS_FILE = CONFIG_DIR / "data" / "embedding_models.json"
+EMBEDDING_MODELS_FILE = CONFIG_DIR / "data" / "embeddings_models.json"
 
 # Styles
 STYLES_FILE = BASE_DIR / "ui" / "styles" / "main.css"

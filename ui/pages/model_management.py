@@ -52,7 +52,7 @@ def run() -> None:
             "Enter the name of the model you want to download:",
             placeholder="e.g., llama2, mistral, gemma... (Press Enter to download)",
             key="model_input",
-        )
+        ).strip()
         if new_model:
             with st.spinner(
                 f"🤖 Downloading {new_model}... This may take a bit depending on the model size"

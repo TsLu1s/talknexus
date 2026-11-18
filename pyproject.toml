@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "talknexus"
-version = "1.1.0"
+version = "1.1.10"
 description = "Ollama Chatbot Multi-Model & RAG Interface"
-authors = ["Luís Fernando da Silva Santos"]
+authors = ["Luís Fernando Santos"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/TsLu1s/talknexus"
@@ -12,12 +12,24 @@ package-mode = false
 python = "^3.11"
 streamlit = ">=1.39.0"
 pandas = ">=1.2.0"
-langchain = "0.3.27"
-langchain-community = "0.3.27"
-sentence-transformers = "3.3.1"
-faiss-cpu = "1.9.0"
-pypdf = "6.6.0"
-pydantic = ">=2.0.0"
+langchain-classic = "^1.0.8"
+langchain-community = "^0.4.2"
+langchain-core = "^1.4.4"
+langchain-text-splitters = "^1.1.3"
+sentence-transformers = "^6.3.0"
+faiss-cpu = "^1.16.0"
+pypdf = "^7.1.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.2.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "--import-mode=importlib -m 'not live'"
+markers = [
+    "live: needs a running Ollama server with models and downloads a HuggingFace model (run: pytest -m live)",
+]
 
 [build-system]
 requires = ["poetry-core"]

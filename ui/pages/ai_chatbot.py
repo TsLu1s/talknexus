@@ -72,8 +72,9 @@ def load_conversation(conversation_id: str) -> None:
     # Restore messages
     st.session_state.messages = data["messages"]
 
-    # Restore conversation chain
-    model_name = data.get("model", st.session_state.get("model_select", ""))
+    # Restore conversation chain, on the model the selector shows
+    # (the saved model may have been removed from Ollama since)
+    model_name = st.session_state.get("model_select") or data.get("model", "")
     st.session_state.conversation = get_conversation_chain(model_name)
 
     # Restore memory if available
@@ -83,7 +84,6 @@ def load_conversation(conversation_id: str) -> None:
     # Set conversation tracking
     st.session_state.current_conversation_id = conversation_id
     st.session_state.conversation_title = data.get("title", NEW_CONVERSATION_TITLE)
-    st.session_state.needs_rerun = True
 
 
 def delete_conversation(conversation_id: str) -> None:
@@ -98,7 +98,6 @@ def delete_conversation(conversation_id: str) -> None:
     st.session_state.conversation_title = NEW_CONVERSATION_TITLE
 
     load_saved_conversation_list()
-    st.session_state.needs_rerun = True
 
 
 def on_model_change() -> None:
@@ -143,40 +142,29 @@ def render_conversation_sidebar() -> None:
 
 def _render_saved_conversations() -> None:
     """Render saved conversations UI."""
-    if st.session_state.saved_conversations:
-        st.markdown("---")
-
-        convo_dict = {}
-        for item in st.session_state.saved_conversations:
-            if len(item) == 3:
-                convo_id, display_name, _ = item
-            else:
-                convo_id, display_name = item
-            convo_dict[display_name] = convo_id
-
-        convo_options = ["Select Conversation"] + list(convo_dict.keys())
-
-        selected_convo = st.selectbox(
-            "Select a conversation to load or manage:",
-            convo_options,
-            index=0,
-            key="convo_selector",
-        )
-
-        if selected_convo != "Select Conversation":
-            selected_id = convo_dict[selected_convo]
-            _render_conversation_actions(selected_id)
-        elif len(st.session_state.saved_conversations) == 0:
-            st.info("Conversation History is empty.")
-    else:
+    if not st.session_state.saved_conversations:
         st.info("Conversation History is empty.")
+        return
+
+    st.markdown("---")
+
+    # Options are IDs: two chats may share a display name (same day, model and title)
+    display_names = dict(st.session_state.saved_conversations)
+
+    selected_id = st.selectbox(
+        "Select a conversation to load or manage:",
+        ["Select Conversation", *display_names],
+        format_func=lambda option: display_names.get(option, option),
+        key="convo_selector",
+    )
+
+    if selected_id != "Select Conversation":
+        _render_conversation_actions(selected_id)
 
 
 def _render_conversation_actions(selected_id: str) -> None:
     """Render action buttons for selected conversation."""
-    action_key = f"action_{selected_id}_index"
-    if action_key not in st.session_state:
-        st.session_state[action_key] = 0
+    action_key = f"action_{selected_id}"
 
     convo_action_options = [
         "Select Action",
@@ -185,16 +173,15 @@ def _render_conversation_actions(selected_id: str) -> None:
     ]
 
     def on_convo_action_change():
-        selected_action = st.session_state[f"action_{selected_id}"]
-        if selected_action == "📝 Continue Conversation":
+        if st.session_state[action_key] == "📝 Continue Conversation":
             load_conversation(selected_id)
-            st.session_state[action_key] = 0
+            # Back to "Select Action", so the same chat can be continued again later
+            st.session_state[action_key] = convo_action_options[0]
 
     convo_action = st.selectbox(
         "Choose action:",
         convo_action_options,
-        index=st.session_state[action_key],
-        key=f"action_{selected_id}",
+        key=action_key,
         on_change=on_convo_action_change,
     )
 
@@ -205,7 +192,6 @@ def _render_conversation_actions(selected_id: str) -> None:
         )
         if delete_confirm:
             delete_conversation(selected_id)
-            st.session_state[action_key] = 0
             st.rerun()
 
 
@@ -256,7 +242,7 @@ def run() -> None:
         st.session_state.conversation = get_conversation_chain(model_name)
 
     # Display chat history
-    display_chat_history()
+    display_chat_history(st.session_state.messages)
 
     # Handle new user input
     if prompt := st.chat_input(f"Chat with {model_name}"):
@@ -279,6 +265,8 @@ def run() -> None:
                 )
 
                 st.session_state.conversation.llm.callbacks = []
+                # Keep <think> reasoning out of the history sent with every next prompt
+                st.session_state.conversation.memory.chat_memory.messages[-1].content = response
 
                 st.session_state.messages.append({
                     "role": MessageRole.ASSISTANT.value,

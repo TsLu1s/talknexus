@@ -1,14 +1,45 @@
-import os
-import pickle
+import json
 import logging
-from typing import Optional
+import os
+import shutil
+from typing import Callable, Optional
 
-from langchain.retrievers import ParentDocumentRetriever
+import faiss
+import numpy as np
+from langchain_classic.retrievers import ParentDocumentRetriever
+from langchain_community.docstore.in_memory import InMemoryDocstore
+from langchain_community.vectorstores import FAISS
+from langchain_core.documents import Document
+from langchain_core.embeddings import Embeddings
+from langchain_core.stores import InMemoryStore
 
 from config import EXPERIMENTS_DIR
 
+EXPERIMENT_NAME_MAX_LENGTH = 100
+
+_INDEX_FILE = "index.faiss"
+_DOCUMENTS_FILE = "documents.json"
+_CONFIG_FILE = "config.json"
+
+
+def is_valid_experiment_name(name: str) -> bool:
+    """Experiment names become folder names: letters, digits, spaces, '-' and '_' only."""
+    return (
+        isinstance(name, str)
+        and bool(name)
+        and name == name.strip()
+        and len(name) <= EXPERIMENT_NAME_MAX_LENGTH
+        and all(c.isalnum() or c in " -_" for c in name)
+    )
+
+
 class ExperimentStore:
-    """Manages RAG experiment persistence."""
+    """
+    Manages RAG experiment persistence.
+
+    Each experiment is a folder with the FAISS index plus JSON documents and
+    config. Nothing is unpickled, so a tampered folder cannot run code.
+    """
 
     def __init__(self, base_dir: str = None):
         """
@@ -20,25 +51,11 @@ class ExperimentStore:
         self.base_dir = base_dir or str(EXPERIMENTS_DIR)
         os.makedirs(self.base_dir, exist_ok=True)
 
-    def _get_paths(self, experiment_name: str) -> tuple[str, str]:
-        """
-        Get file paths for an experiment.
-
-        Args:
-            experiment_name: Name of the experiment
-
-        Returns:
-            Tuple of (retriever_path, config_path)
-        """
-        safe_name = "".join(
-            c for c in experiment_name
-            if c.isalnum() or c in (" ", "-", "_")
-        ).rstrip()
-
-        retriever_path = os.path.join(self.base_dir, f"{safe_name}_retriever.pkl")
-        config_path = os.path.join(self.base_dir, f"{safe_name}_config.pkl")
-
-        return retriever_path, config_path
+    def _get_dir(self, experiment_name: str) -> str:
+        """Return the folder of an experiment, rejecting unsafe names."""
+        if not is_valid_experiment_name(experiment_name):
+            raise ValueError(f"Invalid experiment name: {experiment_name!r}")
+        return os.path.join(self.base_dir, experiment_name)
 
     def save(
         self,
@@ -53,15 +70,28 @@ class ExperimentStore:
             True if save was successful
         """
         try:
-            retriever_path, config_path = self._get_paths(experiment_name)
+            experiment_dir = self._get_dir(experiment_name)
+            os.makedirs(experiment_dir, exist_ok=True)
 
-            # Save retriever
-            with open(retriever_path, "wb") as f:
-                pickle.dump(retriever, f)
+            vectorstore = retriever.vectorstore
+            child_ids = [vectorstore.index_to_docstore_id[i] for i in range(vectorstore.index.ntotal)]
+            parent_ids = list(retriever.docstore.yield_keys())
+            documents = {
+                "children": [
+                    [doc_id, _doc_to_dict(vectorstore.docstore.search(doc_id))] for doc_id in child_ids
+                ],
+                "parents": {
+                    doc_id: _doc_to_dict(doc)
+                    for doc_id, doc in zip(parent_ids, retriever.docstore.mget(parent_ids), strict=True)
+                },
+            }
 
-            # Save configuration
-            with open(config_path, "wb") as f:
-                pickle.dump(config, f)
+            # Written through Python file I/O so non-ASCII names also work on Windows.
+            with open(os.path.join(experiment_dir, _INDEX_FILE), "wb") as f:
+                f.write(faiss.serialize_index(vectorstore.index).tobytes())
+            _write_json(os.path.join(experiment_dir, _DOCUMENTS_FILE), documents)
+            # Config goes last: list_all() only shows experiments that have one.
+            _write_json(os.path.join(experiment_dir, _CONFIG_FILE), config)
 
             return True
 
@@ -72,32 +102,45 @@ class ExperimentStore:
     def load(
         self,
         experiment_name: str,
-    ) -> tuple[Optional[ParentDocumentRetriever], Optional[dict]]:
+        embeddings_factory: Callable[[str], Embeddings],
+    ) -> tuple[Optional[FAISS], Optional[InMemoryStore], Optional[dict]]:
         """
         Load a saved experiment.
 
         Args:
             experiment_name: Name of the experiment to load
+            embeddings_factory: Builds the embedding model from its config key
 
         Returns:
-            Tuple of (retriever, config) or (None, None) on error
+            Tuple of (vectorstore, parent docstore, config) or (None, None, None) on error
         """
         try:
-            retriever_path, config_path = self._get_paths(experiment_name)
+            experiment_dir = self._get_dir(experiment_name)
+            config = _read_json(os.path.join(experiment_dir, _CONFIG_FILE))
+            documents = _read_json(os.path.join(experiment_dir, _DOCUMENTS_FILE))
 
-            # Load retriever
-            with open(retriever_path, "rb") as f:
-                retriever = pickle.load(f)
+            with open(os.path.join(experiment_dir, _INDEX_FILE), "rb") as f:
+                index = faiss.deserialize_index(np.frombuffer(f.read(), dtype=np.uint8))
 
-            # Load configuration
-            with open(config_path, "rb") as f:
-                config = pickle.load(f)
+            children = documents["children"]
+            if index.ntotal != len(children):
+                raise ValueError("index and documents are out of sync")
 
-            return retriever, config
+            vectorstore = FAISS(
+                embedding_function=embeddings_factory(config["embedding_model"]),
+                index=index,
+                docstore=InMemoryDocstore({doc_id: Document(**doc) for doc_id, doc in children}),
+                index_to_docstore_id={i: doc_id for i, (doc_id, _) in enumerate(children)},
+            )
+
+            docstore = InMemoryStore()
+            docstore.mset([(doc_id, Document(**doc)) for doc_id, doc in documents["parents"].items()])
+
+            return vectorstore, docstore, config
 
         except Exception as e:
             logging.error(f"Error loading experiment {experiment_name}: {str(e)}")
-            return None, None
+            return None, None, None
 
     def delete(self, experiment_name: str) -> bool:
         """
@@ -110,54 +153,47 @@ class ExperimentStore:
             True if deletion was successful
         """
         try:
-            retriever_path, config_path = self._get_paths(experiment_name)
-
-            if os.path.exists(retriever_path):
-                os.remove(retriever_path)
-            if os.path.exists(config_path):
-                os.remove(config_path)
-
+            shutil.rmtree(self._get_dir(experiment_name))
             return True
 
-        except Exception as e:
+        except (OSError, ValueError) as e:
             logging.error(f"Error deleting experiment {experiment_name}: {str(e)}")
             return False
 
     def list_all(self) -> list[tuple[str, dict]]:
         """
-        List all experiments with their configurations.
+        List all experiments with their configurations, sorted by name.
 
         Returns:
             List of tuples (experiment_name, config)
         """
         experiments = []
 
-        try:
-            if not os.path.exists(self.base_dir):
-                return experiments
-
-            for filename in os.listdir(self.base_dir):
-                if not filename.endswith("_config.pkl"):
-                    continue
-
-                experiment_name = filename[:-11]  # Remove _config.pkl
-                config_path = os.path.join(self.base_dir, filename)
-
-                try:
-                    with open(config_path, "rb") as f:
-                        config = pickle.load(f)
-                        experiments.append((experiment_name, config))
-                except (pickle.UnpicklingError, KeyError) as e:
-                    logging.error(f"Error loading config for {experiment_name}: {str(e)}")
-                    continue
-
+        if not os.path.exists(self.base_dir):
             return experiments
 
-        except Exception as e:
-            logging.error(f"Error listing experiments: {str(e)}")
-            return []
+        for experiment_name in sorted(os.listdir(self.base_dir)):
+            config_path = os.path.join(self.base_dir, experiment_name, _CONFIG_FILE)
+            if not is_valid_experiment_name(experiment_name) or not os.path.isfile(config_path):
+                continue  # also skips legacy *.pkl experiments, which are never unpickled
 
-    def exists(self, experiment_name: str) -> bool:
-        """Check if an experiment exists."""
-        retriever_path, config_path = self._get_paths(experiment_name)
-        return os.path.exists(retriever_path) and os.path.exists(config_path)
+            try:
+                experiments.append((experiment_name, _read_json(config_path)))
+            except (OSError, ValueError) as e:
+                logging.error(f"Error loading config for {experiment_name}: {str(e)}")
+
+        return experiments
+
+
+def _doc_to_dict(doc: Document) -> dict:
+    return {"page_content": doc.page_content, "metadata": doc.metadata}
+
+
+def _write_json(path: str, data) -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, default=str)
+
+
+def _read_json(path: str):
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)

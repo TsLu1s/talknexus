@@ -1,7 +1,7 @@
-from langchain.chains import ConversationChain
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import PromptTemplate
+from langchain_classic.chains import ConversationChain
+from langchain_classic.memory import ConversationBufferMemory
 from langchain_community.llms import Ollama
+from langchain_core.prompts import PromptTemplate
 
 from config import OLLAMA_BASE_URL, DEFAULT_TEMPERATURE
 
@@ -24,7 +24,7 @@ class ConversationManager:
             base_url: Ollama API base URL
         """
         self.model_name = model_name
-        self.temperature = temperature or DEFAULT_TEMPERATURE
+        self.temperature = DEFAULT_TEMPERATURE if temperature is None else temperature
         self.base_url = base_url or OLLAMA_BASE_URL
         self._chain: ConversationChain | None = None
 
@@ -49,13 +49,12 @@ class ConversationManager:
 
         prompt = PromptTemplate(
             input_variables=["history", "input"],
-            template="""Current conversation:
-            {history}
-            Human: {input}
-            Assistant:""",
+            template="Current conversation:\n{history}\nHuman: {input}\nAssistant:",
         )
 
-        memory = ConversationBufferMemory(return_messages=True)
+        # Plain-text history ("Human: ..." / "Assistant: ...") for a text prompt;
+        # return_messages=True pasted Python message reprs into the prompt instead.
+        memory = ConversationBufferMemory(ai_prefix="Assistant")
 
         return ConversationChain(
             llm=llm,

@@ -4,20 +4,23 @@ import tempfile
 import os
 from typing import Optional
 
-import torch
-from langchain.prompts import PromptTemplate
+import faiss
+from langchain_classic.chains import RetrievalQA
+from langchain_classic.retrievers import ParentDocumentRetriever
+from langchain_community.docstore.in_memory import InMemoryDocstore
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.embeddings import HuggingFaceEmbeddings, OllamaEmbeddings
 from langchain_community.llms import Ollama
-from langchain.chains import RetrievalQA
-from langchain.embeddings import HuggingFaceEmbeddings, OllamaEmbeddings
-from langchain.document_loaders import PyPDFLoader
-from langchain.vectorstores import FAISS
-from langchain.retrievers import ParentDocumentRetriever
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.storage import InMemoryStore
+from langchain_community.vectorstores import FAISS
+from langchain_core.prompts import PromptTemplate
+from langchain_core.stores import InMemoryStore
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from config import (
     OLLAMA_BASE_URL,
     DEFAULT_TEMPERATURE,
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_TOP_K,
     EMBEDDING_MODELS_FILE,
     PARENT_CHUNK_MULTIPLIER,
     CHUNK_OVERLAP_RATIO,
@@ -95,7 +98,6 @@ class RAGEngine:
         embedding_model: str = "bge-small",
         child_chunk_size: int = 50,
         top_k: int = 4,
-        llm_model: str = None,
     ) -> int:
         """
         Process PDF files and create retriever.
@@ -123,43 +125,17 @@ class RAGEngine:
             # Setup embeddings
             embeddings = self._create_embeddings(embedding_model)
 
-            # Initialize vectorstore
-            vectorstore = FAISS.from_texts(
-                texts=["placeholder"],
-                embedding=embeddings,
+            # Start from an empty index, so no dummy entry takes a top-k slot
+            vectorstore = FAISS(
+                embedding_function=embeddings,
+                index=faiss.IndexFlatL2(len(embeddings.embed_query("dimension probe"))),
+                docstore=InMemoryDocstore(),
+                index_to_docstore_id={},
             )
 
-            # Calculate chunk sizes
-            parent_chunk_size = child_chunk_size * PARENT_CHUNK_MULTIPLIER
-            child_overlap = int(child_chunk_size * CHUNK_OVERLAP_RATIO)
-            parent_overlap = int(parent_chunk_size * CHUNK_OVERLAP_RATIO)
-
-            # Setup splitters
-            parent_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=parent_chunk_size,
-                chunk_overlap=parent_overlap,
-                length_function=len,
-                separators=self._separators,
-            )
-
-            child_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=child_chunk_size,
-                chunk_overlap=child_overlap,
-                length_function=len,
-                separators=self._separators,
-            )
-
-            # Setup storage
+            # Setup storage and retriever
             self.store = InMemoryStore()
-
-            # Initialize retriever
-            self.retriever = ParentDocumentRetriever(
-                vectorstore=vectorstore,
-                docstore=self.store,
-                parent_splitter=parent_splitter,
-                child_splitter=child_splitter,
-                search_kwargs={"k": top_k},
-            )
+            self.retriever = self._build_retriever(vectorstore, self.store, child_chunk_size, top_k)
 
             # Add documents
             self.retriever.add_documents(documents)
@@ -170,12 +146,42 @@ class RAGEngine:
             logging.error(f"Error processing PDFs: {str(e)}")
             raise
 
+    def _build_retriever(
+        self,
+        vectorstore: FAISS,
+        docstore: InMemoryStore,
+        child_chunk_size: int,
+        top_k: int,
+    ) -> ParentDocumentRetriever:
+        """Create the parent/child retriever over a vectorstore and parent docstore."""
+        parent_chunk_size = child_chunk_size * PARENT_CHUNK_MULTIPLIER
+
+        return ParentDocumentRetriever(
+            vectorstore=vectorstore,
+            docstore=docstore,
+            parent_splitter=RecursiveCharacterTextSplitter(
+                chunk_size=parent_chunk_size,
+                chunk_overlap=int(parent_chunk_size * CHUNK_OVERLAP_RATIO),
+                length_function=len,
+                separators=self._separators,
+            ),
+            child_splitter=RecursiveCharacterTextSplitter(
+                chunk_size=child_chunk_size,
+                chunk_overlap=int(child_chunk_size * CHUNK_OVERLAP_RATIO),
+                length_function=len,
+                separators=self._separators,
+            ),
+            search_kwargs={"k": top_k},
+        )
+
     def _load_pdf_documents(self, pdf_files: list) -> list:
         """Load documents from PDF files."""
         documents = []
         with tempfile.TemporaryDirectory() as temp_dir:
-            for pdf_file in pdf_files:
-                temp_path = os.path.join(temp_dir, pdf_file.name)
+            for index, pdf_file in enumerate(pdf_files):
+                # The browser sends the file name: keep only its last part, so a name
+                # like "../../x.pdf" cannot write outside temp_dir.
+                temp_path = os.path.join(temp_dir, f"{index}_{os.path.basename(pdf_file.name)}")
                 with open(temp_path, "wb") as f:
                     f.write(pdf_file.getbuffer())
                 loader = PyPDFLoader(temp_path)
@@ -184,7 +190,6 @@ class RAGEngine:
 
     def _create_embeddings(self, embedding_model: str):
         """Create embedding model instance."""
-        device = "cuda" if torch.cuda.is_available() else "cpu"
         model_config = EmbeddingModels.get_model_config(embedding_model)
 
         if model_config.get("type") == EmbeddingModelType.OLLAMA.value:
@@ -192,13 +197,13 @@ class RAGEngine:
                 model=model_config["name"],
                 base_url=OLLAMA_BASE_URL,
             )
-        else:
-            return HuggingFaceEmbeddings(
-                model_name=model_config["name"],
-                model_kwargs={"device": device},
-                encode_kwargs={"normalize_embeddings": True},
-                multi_process=True,
-            )
+        # sentence-transformers picks the device itself (CUDA, Apple MPS or CPU).
+        # No multi_process: it started 4 worker processes per call, which made
+        # small uploads take tens of seconds.
+        return HuggingFaceEmbeddings(
+            model_name=model_config["name"],
+            encode_kwargs={"normalize_embeddings": True},
+        )
 
     def get_retrieval_chain(self, ollama_model: str, stream_handler=None):
         """
@@ -249,11 +254,19 @@ class RAGEngine:
     def load_experiment(self, experiment_name: str) -> tuple[bool, dict]:
         """Load a saved experiment."""
         try:
-            retriever, config = self.experiment_store.load(experiment_name)
-            if retriever and config:
-                self.retriever = retriever
-                return True, config
-            return False, {}
+            vectorstore, docstore, config = self.experiment_store.load(
+                experiment_name,
+                self._create_embeddings,
+            )
+            if vectorstore is None:
+                return False, {}
+            self.retriever = self._build_retriever(
+                vectorstore,
+                docstore,
+                config.get("chunk_size", DEFAULT_CHUNK_SIZE),
+                config.get("top_k", DEFAULT_TOP_K),
+            )
+            return True, config
         except Exception as e:
             logging.error(f"Error loading experiment {experiment_name}: {str(e)}")
             return False, {}

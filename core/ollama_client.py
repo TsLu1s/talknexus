@@ -1,14 +1,19 @@
 import json
+import re
 import subprocess
 from typing import Optional
 
 import requests
 
 from config import (
-    OLLAMA_API_TAGS,
+    OLLAMA_BASE_URL,
     OLLAMA_MODELS_FILE,
     MODEL_FILTER_KEYWORDS,
 )
+
+# Ollama names look like "llama3.2", "llama3.2:1b" or "hf.co/user/repo:Q4_K_M".
+# Must not start with "-", so user input can never be read as a CLI option.
+_MODEL_NAME_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}")
 
 
 class OllamaClient:
@@ -21,7 +26,6 @@ class OllamaClient:
         Args:
             base_url: Optional custom base URL for Ollama API
         """
-        from config import OLLAMA_BASE_URL
         self.base_url = base_url or OLLAMA_BASE_URL
         self.api_tags = f"{self.base_url}/api/tags"
 
@@ -53,8 +57,8 @@ class OllamaClient:
                     )
                 ]
             return []
-        except requests.RequestException:
-            return []
+        except (requests.RequestException, ValueError, KeyError, TypeError, AttributeError):
+            return []  # Ollama down, or something else answering on its port
 
     def get_model_info(self, model_name: str) -> Optional[str]:
         """
@@ -88,6 +92,9 @@ class OllamaClient:
         Returns:
             Tuple of (success: bool, message: str)
         """
+        if not _MODEL_NAME_PATTERN.fullmatch(model_name):
+            return False, f"Invalid model name: {model_name!r}"
+
         try:
             process = subprocess.run(
                 ["ollama", "pull", model_name],

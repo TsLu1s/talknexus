@@ -1,6 +1,6 @@
 import re
 
-from langchain.callbacks.base import BaseCallbackHandler
+from langchain_core.callbacks import BaseCallbackHandler
 
 import warnings
 warnings.filterwarnings("ignore", category=Warning)
@@ -54,9 +54,7 @@ class StreamHandler(BaseCallbackHandler):
             **kwargs: Additional keyword arguments from the callback
         """
         try:
-            clean_text = self._process_token(token)
-            clean_text = self._clean_ai_message_format(clean_text)
-            self.container.markdown(clean_text)
+            self.container.markdown(self._process_token(token))
 
         except Exception as e:
             # Log error without disrupting stream
@@ -87,29 +85,3 @@ class StreamHandler(BaseCallbackHandler):
             self.text += token
 
         return self.text
-
-    def _clean_ai_message_format(self, text: str) -> str:
-        """Clean up AIMessage formatting artifacts."""
-        if "AIMessage" not in text:
-            return text
-
-        # Handle complete AIMessage format
-        if 'content="' in text:
-            try:
-                text = text.split('content="')[1].rsplit('"', 1)[0]
-            except IndexError:
-                pass
-
-        # Remove remaining AIMessage wrapper artifacts
-        cleanup_patterns = [
-            "AIMessage(",
-            ", additional_kwargs={}",
-            ", response_metadata={})",
-            '{ "data":',
-            "}",
-        ]
-
-        for pattern in cleanup_patterns:
-            text = text.replace(pattern, "")
-
-        return text
